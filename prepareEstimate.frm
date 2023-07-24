@@ -13,10 +13,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Private Sub CheckBox3_Click()
 
-End Sub
 
-Private Sub ComplexFrame_Click()
-
+Private Sub exitCommandButton_Click()
+Unload prepareEstimate
 End Sub
