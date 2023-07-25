@@ -1,4 +1,6 @@
 Attribute VB_Name = "userFormEstimate"
+Public typeEstimate As String
+
 Sub userFormEstimate()
 prepareEstimate.PlantingTextBox.Value = "Посадка *2024"
 prepareEstimate.restorationTextBox.Value = "Воссановление *2024"
