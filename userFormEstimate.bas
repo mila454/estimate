@@ -10,6 +10,4 @@ prepareEstimate.care3TextBox.Value = "”ход *2026"
 
 prepareEstimate.Show
 
-
-
 End Sub
