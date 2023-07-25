@@ -15,6 +15,19 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 
+
 Private Sub exitCommandButton_Click()
 Unload prepareEstimate
+End Sub
+
+Private Sub SNOptionButton_Click()
+typeEstimate = "ям"
+End Sub
+
+Private Sub UserForm_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
+
+If KeyCode = vbReyEscape Then
+    Unload Me
+End If
+
 End Sub
