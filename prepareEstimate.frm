@@ -24,6 +24,14 @@ Private Sub SNOptionButton_Click()
 typeEstimate = "СН"
 End Sub
 
+Private Sub UserForm_Initialize()
+prepareEstimate.PlantingTextBox.Value = "Посадка *2024"
+prepareEstimate.restorationTextBox.Value = "Воссановление *2024"
+prepareEstimate.care1TextBox.Value = "Уход *2024"
+prepareEstimate.care2TextBox.Value = "Уход *2025"
+prepareEstimate.care3TextBox.Value = "Уход *2026"
+End Sub
+
 Private Sub UserForm_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
 
 If KeyCode = vbReyEscape Then
