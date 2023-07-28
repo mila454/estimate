@@ -14,8 +14,8 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-Dim planting As String
-
+Public colLetter As String
+Public colNumber
 
 
 
@@ -35,21 +35,32 @@ Next
 
 End Sub
 
+Private Sub estimateCommandButton_Click()
+
+If NDSCheckBox.Value = True Then
+    Call userFormEstimate.nds
+End If
+
+End Sub
+
 Private Sub exitCommandButton_Click()
 Unload prepareEstimate
 End Sub
 
 
+Private Sub SNOptionButton_Click()
 
-
-Private Sub TSNCheckBox_Click()
+colLetter = "J"
+colNumber = 10
 
 End Sub
 
+Private Sub TSNOptionButton_Click()
 
+colLetter = "K"
+colNumber = 11
 
-
-
+End Sub
 
 Private Sub UserForm_Initialize()
 
