@@ -14,10 +14,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
-Public colLetter As String
-Public colNumber
-
-
+Public typeEstimate As String
 
 
 Private Sub cancelCommandButton_Click()
@@ -36,9 +33,9 @@ Next
 End Sub
 
 Private Sub estimateCommandButton_Click()
-
+prepareEstimate.Hide
 If NDSCheckBox.Value = True Then
-    Call userFormEstimate.nds
+    Call userFormEstimate.nds(typeEstimate)
 End If
 
 End Sub
@@ -50,19 +47,23 @@ End Sub
 
 Private Sub SNOptionButton_Click()
 
-colLetter = "J"
-colNumber = 10
+typeEstimate = "ям"
 
 End Sub
 
 Private Sub TSNOptionButton_Click()
 
-colLetter = "K"
-colNumber = 11
+typeEstimate = "рям"
 
 End Sub
 
 Private Sub UserForm_Initialize()
+
+If SNOptionButton.Value = True Then
+    typeEstimate = "ям"
+Else
+    typeEstimate = "рям"
+End If
 
 End Sub
 

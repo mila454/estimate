@@ -4,8 +4,12 @@ Option Explicit
 Dim lastRow As Integer
 Dim seachRange As Range
 Dim seachStr As String
-Dim totalEstimate As New Collection
-Dim compile As New Collection
+Dim letterCol As String
+Dim numberCol As Integer
+Dim totalEstimate As New Collection 'номер строки итого по смете
+Dim compile As New Collection 'номер строки составил
+Dim tableCap As New Collection 'номер строки шапки таблицы
+
 
 Sub userFormEstimate()
 
@@ -13,12 +17,40 @@ prepareEstimate.Show
 
 End Sub
 
-Sub nds()
+Sub nds(typeEstimate)
+
+If typeEstimate = "ТСН" Then
+    numberCol = 11
+    letterCol = "K"
+ElseIf typeEstimate = "СН" Then
+    numberCol = 11
+    letterCol = "K"
+End If
 
 Call activateSheet("Смета *")
+
 Call clearTail
 
+Set seachRange = Range(Cells(1, 1), Cells(lastRow, 10))
+seachStr = "№ п/п"
+Set tableCap = Seach(seachStr, seachRange)
 
+Range("A" & totalEstimate(1) + 1 & ":A" & totalEstimate(1) + 3).EntireRow.Insert
+
+If typeEstimate = "ТСН" Then
+    Range("H" & totalEstimate(1) & ":I" & totalEstimate(1)).UnMerge
+    Cells(totalEstimate(1), 9).formula = "=sum(O" & tableCap(1) + 2 & ":O" & totalEstimate(1) - 1 & ")"
+    Cells(totalEstimate(1), 8).Clear
+    Call ndsTotal(totalEstimate(1), 9, "I")
+    Call setFormat(totalEstimate(1), 9, totalEstimate(1) + 2, 9)
+End If
+
+Range(Split(Range(letterCol & totalEstimate(1)).Offset(, -1).Address, "$")(1) & totalEstimate(1) & ":" & letterCol & totalEstimate(1)).UnMerge
+Cells(totalEstimate(1), numberCol).formula = "=sum(P" & tableCap(1) + 2 & ":P" & totalEstimate(1) - 1 & ")"
+Cells(totalEstimate(1), numberCol - 1).Clear
+
+Call ndsTotal(totalEstimate(1), numberCol, letterCol)
+Columns(letterCol & ":" & letterCol).EntireColumn.AutoFit
 
 End Sub
 
@@ -112,6 +144,29 @@ Set totalEstimate = Seach(seachStr, seachRange)
 Call quickSort(totalEstimate, 1, totalEstimate.Count)
 seachStr = "Составил"
 Set compile = Seach(seachStr, seachRange)
-Range("A" & totalEstimate(1) + 1 & ":A" & compile(1) - 1).EntireRow.Hidden = False
-Range("A" & totalEstimate(1) + 1 & ":A" & compile(1) - 1).EntireRow.Delete
+If totalEstimate(1) + 1 < compile(1) - 1 Then
+    Range("A" & totalEstimate(1) + 1 & ":A" & compile(1) - 1).EntireRow.Hidden = False
+    Range("A" & totalEstimate(1) + 1 & ":A" & compile(1) - 1).EntireRow.Delete
+End If
+
+End Sub
+
+Sub ndsTotal(r, numberCol, letterCol)
+'расчет и вывод НДС и итого с НДС
+
+Cells(r + 1, 1).Value = "НДС 20%"
+Cells(r + 1, numberCol).formula = "=round(" & letterCol & r & "*0.2,2)"
+Cells(r + 2, 1) = "Итого с НДС 20%"
+Cells(r + 2, numberCol).formula = "=" & letterCol & r & "+" & letterCol & (r + 1)
+Range("A" & r + 1 & ":A" & r + 2).WrapText = False
+
+End Sub
+
+Sub setFormat(row1Format, col1Format, row2Format, col2Format)
+'форматирование диапазона
+With Range(Cells(row1Format, col1Format), Cells(row2Format, col2Format))
+    .Font.Bold = True
+    .NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
+End With
+
 End Sub
