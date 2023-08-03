@@ -10,11 +10,11 @@ Dim currYear As Integer
 Dim signer As String 'ФИО утверждающего
 Dim position As String 'должность утверждающего
 Dim typeEstimate As String 'тип сметы: ТСН или СН
-Dim smetaName As String 'наименование сметы
+Dim objectName As String 'наименование сметы
 Dim totalEstimate As New Collection 'номер строки итого по смете
-Dim compile As New Collection 'номер строки составил
 Dim tableCap As New Collection 'номер строки шапки таблицы
 Dim approve As New Collection 'номер строки СОГЛАСОВАНО
+Dim smetaName As New Collection 'наименование локальных смет
 
 Sub userFormEstimate()
 
@@ -23,19 +23,23 @@ prepareEstimate.Show
 End Sub
 
 Sub nds()
-
-
-Call determinationEstimateType
+Dim i As Variant
 
 Call activateSheet("Смета *")
-
+lastRow = seachLastCell() + 1
+Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
+Call determinationEstimateType
+Call header
 Call clearTail
 
-Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
 seachStr = "Наименование работ и затрат"
 Set tableCap = Seach(seachStr, seachRange)
+Call quickSort(tableCap, 1, tableCap.Count)
 
-Range("A" & totalEstimate(1) + 1 & ":A" & totalEstimate(1) + 3).EntireRow.Insert
+For i = 0 To totalEstimate.Count - 1
+    Range("A" & totalEstimate(i + 1) + 1 + i * 3 & ":A" & totalEstimate(i + 1) + 1 + i * 3 + 3).EntireRow.Insert
+    
+Next
 
 If typeEstimate = "ТСН" Then
     Range("H" & totalEstimate(1) & ":I" & totalEstimate(1)).UnMerge
@@ -52,7 +56,7 @@ Cells(totalEstimate(1), numberCol - 1).Clear
 Call ndsTotal(totalEstimate(1), numberCol, letterCol)
 Columns(letterCol & ":" & letterCol).EntireColumn.AutoFit
 
-Call header
+
 
 End Sub
 
@@ -87,7 +91,7 @@ Dim firstFoundCell As Range
 
 Set Seach = New Collection
 
-Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues)
+Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues) 'Cells(20, 6).Font.color = 16711680
 Set firstFoundCell = foundCell
 
 If firstFoundCell Is Nothing Then
@@ -139,17 +143,30 @@ End Sub
 
 Sub clearTail()
 'очистка, удаление объединения между Итого по локальной смете... и Составил-Проверил
-lastRow = seachLastCell() + 1
+Dim i As Variant
+
+Call activateSheet("Смета *")
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 9))
 seachStr = "Итого по*смете*"
 Set totalEstimate = Seach(seachStr, seachRange)
 Call quickSort(totalEstimate, 1, totalEstimate.Count)
-seachStr = "Составил"
-Set compile = Seach(seachStr, seachRange)
-If totalEstimate(1) + 1 < compile(1) - 1 Then
-    Range("A" & totalEstimate(1) + 1 & ":A" & compile(1) - 1).EntireRow.Hidden = False
-    Range("A" & totalEstimate(1) + 1 & ":A" & compile(1) - 1).EntireRow.Delete
+If smetaName.Count > 1 Then
+    Range("A" & totalEstimate(1) + 1 & ":A" & approve(1) + 5).EntireRow.Hidden = False
+    Range("A" & totalEstimate(1) + 1 & ":A" & approve(1) + 5).EntireRow.Delete
+    totalEstimate.Add totalEstimate(2) - 11, , , 1
+    totalEstimate.Add totalEstimate(4) - 11, , , 2
+    totalEstimate.Remove (totalEstimate.Count)
+    totalEstimate.Remove (totalEstimate.Count)
+    Range("A" & totalEstimate(2) + 1 & ":A" & totalEstimate(3) - 1).EntireRow.Hidden = False
+    If (totalEstimate(3) - 1) - (totalEstimate(2) + 1) > 1 Then
+        Range("A" & totalEstimate(2) + 1 & ":A" & totalEstimate(3) - 1).EntireRow.Delete
+        totalEstimate.Add totalEstimate(3) - 2, , 3
+        totalEstimate.Remove (totalEstimate.Count)
+    End If
+
 End If
+Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & lastRow).EntireRow.Hidden = False
+Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & lastRow).EntireRow.Delete
 
 End Sub
 
@@ -198,8 +215,6 @@ End Sub
 Sub header()
 'Формирование шапки, наименования сметы
 
-Call activateSheet("Source")
-smetaName = Cells(20, 7).Value
 Call activateSheet("Смета *")
 seachStr = "СОГЛАСОВАНО"
 Set approve = Seach(seachStr, seachRange)
@@ -223,8 +238,10 @@ With Range("B6:E6, B7:D7, B8:D8")
     .HorizontalAlignment = xlLeft
 End With
 Call heightAdjustment(Range("B6:D6"))
+Call countEstimate
 
-Range("A10, A15") = smetaName
+Range("A10") = objectName
+Range("A15") = smetaName(2)
 Call heightAdjustment(Range("A10:K10"))
 Call heightAdjustment(Range("A15:K15"))
 
@@ -258,3 +275,24 @@ mergedRange.RowHeight = mergedRange.RowHeight * WorksheetFunction.RoundUp(myLen 
 
 End Sub
 
+Sub countEstimate()
+'определение количества смет и их наменований
+Dim temp As New Collection
+Dim tempLastRow As Integer
+Dim item As Variant
+
+Call activateSheet("Source")
+objectName = Cells(20, 7).Value
+tempLastRow = Cells(Rows.Count, 6).End(xlUp).Row
+seachStr = "Новая локальная смета*"
+Set seachRange = Range(Cells(1, 6), Cells(tempLastRow, 6))
+Set temp = Seach(seachStr, seachRange)
+
+For Each item In temp
+    If Cells(item, 6).Font.color = 16711680 Then
+        smetaName.Add Cells(item, 7).Value
+    End If
+Next
+Call activateSheet("Смета *")
+
+End Sub
