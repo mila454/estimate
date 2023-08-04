@@ -12,7 +12,6 @@ Dim position As String 'должность утверждающего
 Dim typeEstimate As String 'тип сметы: ТСН или СН
 Dim objectName As String 'наименование сметы
 Dim totalEstimate As New Collection 'номер строки итого по смете
-Dim tableCap As New Collection 'номер строки шапки таблицы
 Dim approve As New Collection 'номер строки СОГЛАСОВАНО
 Dim smetaName As New Collection 'наименование локальных смет
 
@@ -24,6 +23,7 @@ End Sub
 
 Sub nds()
 Dim i As Variant
+Dim item As Variant
 
 Call activateSheet("Смета *")
 lastRow = seachLastCell() + 1
@@ -32,29 +32,26 @@ Call determinationEstimateType
 Call header
 Call clearTail
 
-seachStr = "Наименование работ и затрат"
-Set tableCap = Seach(seachStr, seachRange)
-Call quickSort(tableCap, 1, tableCap.Count)
+If totalEstimate.Count > 1 Then
+    For i = 1 To totalEstimate.Count - 1
+        Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i) + 3).EntireRow.Insert
+        Call ndsTotal(totalEstimate(i), numberCol, letterCol)
+        totalEstimate.Add totalEstimate(i + 1) + i * 3, , , i
+        totalEstimate.Remove (i + 2)
+    Next
+End If
+Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & totalEstimate(totalEstimate.Count) + 3).EntireRow.Insert
+Call ndsTotal(totalEstimate(totalEstimate.Count), numberCol, letterCol)
 
-For i = 0 To totalEstimate.Count - 1
-    Range("A" & totalEstimate(i + 1) + 1 + i * 3 & ":A" & totalEstimate(i + 1) + 1 + i * 3 + 3).EntireRow.Insert
-    
+For Each item In totalEstimate
+    Call cancelMerge(item)
 Next
 
 If typeEstimate = "ТСН" Then
-    Range("H" & totalEstimate(1) & ":I" & totalEstimate(1)).UnMerge
-    Cells(totalEstimate(1), 9).formula = "=sum(O" & tableCap(1) + 2 & ":O" & totalEstimate(1) - 1 & ")"
-    Cells(totalEstimate(1), 8).Clear
     Call ndsTotal(totalEstimate(1), 9, "I")
     Call setFormat(totalEstimate(1), 9, totalEstimate(1) + 2, 9)
 End If
 
-Range(Split(Range(letterCol & totalEstimate(1)).Offset(, -1).Address, "$")(1) & totalEstimate(1) & ":" & letterCol & totalEstimate(1)).UnMerge
-Cells(totalEstimate(1), numberCol).formula = "=sum(P" & tableCap(1) + 4 & ":P" & totalEstimate(1) - 1 & ")"
-Cells(totalEstimate(1), numberCol - 1).Clear
-
-Call ndsTotal(totalEstimate(1), numberCol, letterCol)
-Columns(letterCol & ":" & letterCol).EntireColumn.AutoFit
 
 
 
@@ -294,5 +291,26 @@ For Each item In temp
     End If
 Next
 Call activateSheet("Смета *")
+
+End Sub
+
+Sub cancelMerge(numberRow)
+'отмена объединения ячеек и перенос формулы
+
+If typeEstimate = "ТСН" Then
+    Range("H" & numberRow & ":I" & numberRow).UnMerge
+    Cells(numberRow, 9).formula = Cells(numberRow, 8).formula
+    Cells(numberRow, 8).Clear
+    Call setFormat(numberRow, 9, numberRow, 9)
+
+End If
+
+Range(Split(Range(letterCol & numberRow).Offset(, -1).Address, "$")(1) & numberRow & ":" & letterCol & numberRow).UnMerge
+Cells(numberRow, numberCol).formula = Cells(numberRow, numberCol - 1).formula
+Cells(numberRow, numberCol - 1).Clear
+Call setFormat(numberRow, numberCol, numberRow, numberCol)
+
+Columns(letterCol & ":" & letterCol).EntireColumn.AutoFit
+
 
 End Sub
