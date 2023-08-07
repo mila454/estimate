@@ -35,12 +35,14 @@ Call clearTail
 If totalEstimate.Count > 1 Then
     For i = 1 To totalEstimate.Count - 1
         Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i) + 3).EntireRow.Insert
+        Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)).Value = "Итого по локальной смете №" & i & ": " & smetaName(i)
         Call ndsTotal(totalEstimate(i), numberCol, letterCol)
         totalEstimate.Add totalEstimate(i + 1) + i * 3, , , i
         totalEstimate.Remove (i + 2)
     Next
 End If
 Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & totalEstimate(totalEstimate.Count) + 3).EntireRow.Insert
+Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете:" & objectName
 Call ndsTotal(totalEstimate(totalEstimate.Count), numberCol, letterCol)
 
 For Each item In totalEstimate
@@ -290,6 +292,7 @@ For Each item In temp
         smetaName.Add Cells(item, 7).Value
     End If
 Next
+Call quickSort(smetaName, 1, smetaName.Count)
 Call activateSheet("Смета *")
 
 End Sub
