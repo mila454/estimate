@@ -11,10 +11,12 @@ Dim answer As Variant 'ответ на вопрос об НДС в том числе
 Dim signer As String 'ФИО утверждающего
 Dim position As String 'должность утверждающего
 Dim typeEstimate As String 'тип сметы: ТСН или СН
-Dim objectName As String 'наименование сметы
 Dim totalEstimate As New Collection 'номер строки итого по смете
 Dim approve As New Collection 'номер строки СОГЛАСОВАНО
-Dim smetaName As New Collection 'наименование локальных смет
+Dim namePosition As New Dictionary 'ключ:номер ЛОКАЛЬНАЯ СМЕТА № значение: наименование локальной сметы
+Dim nameLocation As Variant
+Dim smetaName As Variant
+Dim numberEstimates As Integer
 
 Sub userFormEstimate()
 
@@ -36,7 +38,7 @@ Call clearTail
 If totalEstimate.Count > 1 Then
     For i = 1 To totalEstimate.Count - 1
         Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i) + 3).EntireRow.Insert
-        Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)).Value = "Итого по локальной смете №" & i & ": " & smetaName(i)
+        Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)).Value = "Итого по локальной смете №" & i & ": " & smetaName(i - 1)
         Call heightAdjustment(Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)))
         If answer = 6 And Cells(totalEstimate(i), 1).Value Like "*Стоимость*посадочного*материала*" Then
             Call NDSIncluding(totalEstimate(i) + 1, numberCol, letterCol)
@@ -48,7 +50,7 @@ If totalEstimate.Count > 1 Then
     Next
 End If
 Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & totalEstimate(totalEstimate.Count) + 3).EntireRow.Insert
-Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете:" & objectName
+Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете:" & smetaName(0)
 Call ndsTotal(totalEstimate(totalEstimate.Count), numberCol, letterCol)
 Call heightAdjustment(Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)))
 For Each item In totalEstimate
@@ -96,7 +98,7 @@ Dim firstFoundCell As Range
 
 Set Seach = New Collection
 
-Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues) 'Cells(20, 6).Font.color = 16711680
+Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues)
 Set firstFoundCell = foundCell
 
 If firstFoundCell Is Nothing Then
@@ -155,7 +157,8 @@ Set seachRange = Range(Cells(1, 1), Cells(lastRow, 9))
 seachStr = "Итого по*смете*"
 Set totalEstimate = Seach(seachStr, seachRange)
 Call quickSort(totalEstimate, 1, totalEstimate.Count)
-If smetaName.Count > 1 Then
+
+If numberEstimates > 1 Then
     Range("A" & totalEstimate(1) + 1 & ":A" & approve(1) + 5).EntireRow.Hidden = False
     Range("A" & totalEstimate(1) + 1 & ":A" & approve(1) + 5).EntireRow.Delete
     totalEstimate.Add totalEstimate(2) - 11, , , 1
@@ -220,7 +223,7 @@ End Sub
 Sub header()
 'Формирование шапки, наименования сметы
 Dim item As Variant
-Dim quiestion As String
+Dim i As Variant
 
 Call activateSheet("Смета *")
 seachStr = "СОГЛАСОВАНО"
@@ -247,18 +250,16 @@ End With
 Call heightAdjustment(Range("B6:D6"))
 Call countEstimate
 
-For Each item In smetaName
-    If item Like "*Стоимость*посадочного*материала" Then
-        quiestion = "В смете: " & item & " НДС в том числе?"
-        answer = MsgBox(quiestion, vbYesNo)
-    End If
+For i = 0 To numberEstimates - 1
+    Cells(nameLocation(i) + 3, 1).Value = Cells(nameLocation(i), 1).Value & i + 1
+    Cells(nameLocation(i) + 5, 1).Value = smetaName(i)
+    Range(Cells(nameLocation(i), 1), Cells(nameLocation(i) + 1, numberCol + 1)).Clear
 Next
-Range("A10") = objectName
-Range("A15") = smetaName(1)
+
 Call heightAdjustment(Range("A10:K10"))
 Call heightAdjustment(Range("A15:K15"))
 
-Cells(13, 1) = "ЛОКАЛЬНАЯ СМЕТА № 1"
+
 With Range(Cells(3, 1), Cells(7, 2))
     .Font.Name = "Times New Roman"
     .Font.Size = 13
@@ -290,25 +291,26 @@ End Sub
 
 Sub countEstimate()
 'определение количества смет и их наменований
-Dim temp As New Collection
-Dim tempLastRow As Integer
 Dim item As Variant
+Dim quiestion As String
 
-Call activateSheet("Source")
-objectName = Cells(20, 7).Value
-tempLastRow = Cells(Rows.Count, 6).End(xlUp).Row
-seachStr = "Новая локальная смета*"
-Set seachRange = Range(Cells(1, 6), Cells(tempLastRow, 6))
-Set temp = Seach(seachStr, seachRange)
-
-For Each item In temp
-    If Cells(item, 6).Font.color = 16711680 Then
-        smetaName.Add Cells(item, 7).Value
+For Each item In Range("A1:K" & lastRow)
+    If item Like "*ЛОКАЛЬНАЯ СМЕТА №*" Then
+        namePosition.Add item.Row, Cells((item.Row + 3), item.Column).Value
     End If
 Next
-Call quickSort(smetaName, 1, smetaName.Count)
-Call activateSheet("Смета *")
 
+item = ""
+
+nameLocation = namePosition.Keys
+smetaName = namePosition.Items
+numberEstimates = UBound(smetaName) + 1
+For Each item In smetaName
+    If item Like "*Стоимость*посадочного*материала" Then
+        quiestion = "В смете: " & item & " НДС в том числе?"
+        answer = MsgBox(quiestion, vbYesNo)
+    End If
+Next
 End Sub
 
 Sub cancelMerge(numberRow)
