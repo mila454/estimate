@@ -7,6 +7,7 @@ Dim seachStr As String
 Dim letterCol As String
 Dim numberCol As Integer
 Dim currYear As Integer
+Dim answer As Variant 'ответ на вопрос об НДС в том числе
 Dim signer As String 'ФИО утверждающего
 Dim position As String 'должность утверждающего
 Dim typeEstimate As String 'тип сметы: ТСН или СН
@@ -36,7 +37,12 @@ If totalEstimate.Count > 1 Then
     For i = 1 To totalEstimate.Count - 1
         Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i) + 3).EntireRow.Insert
         Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)).Value = "Итого по локальной смете №" & i & ": " & smetaName(i)
-        Call ndsTotal(totalEstimate(i), numberCol, letterCol)
+        Call heightAdjustment(Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)))
+        If answer = 6 And Cells(totalEstimate(i), 1).Value Like "*Стоимость*посадочного*материала*" Then
+            Call NDSIncluding(totalEstimate(i) + 1, numberCol, letterCol)
+        Else
+            Call ndsTotal(totalEstimate(i), numberCol, letterCol)
+        End If
         totalEstimate.Add totalEstimate(i + 1) + i * 3, , , i
         totalEstimate.Remove (i + 2)
     Next
@@ -44,7 +50,7 @@ End If
 Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & totalEstimate(totalEstimate.Count) + 3).EntireRow.Insert
 Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете:" & objectName
 Call ndsTotal(totalEstimate(totalEstimate.Count), numberCol, letterCol)
-
+Call heightAdjustment(Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)))
 For Each item In totalEstimate
     Call cancelMerge(item)
 Next
@@ -213,6 +219,8 @@ End Sub
 
 Sub header()
 'Формирование шапки, наименования сметы
+Dim item As Variant
+Dim quiestion As String
 
 Call activateSheet("Смета *")
 seachStr = "СОГЛАСОВАНО"
@@ -239,8 +247,14 @@ End With
 Call heightAdjustment(Range("B6:D6"))
 Call countEstimate
 
+For Each item In smetaName
+    If item Like "*Стоимость*посадочного*материала" Then
+        quiestion = "В смете: " & item & " НДС в том числе?"
+        answer = MsgBox(quiestion, vbYesNo)
+    End If
+Next
 Range("A10") = objectName
-Range("A15") = smetaName(2)
+Range("A15") = smetaName(1)
 Call heightAdjustment(Range("A10:K10"))
 Call heightAdjustment(Range("A15:K15"))
 
@@ -317,3 +331,14 @@ Columns(letterCol & ":" & letterCol).EntireColumn.AutoFit
 
 
 End Sub
+
+Sub NDSIncluding(numberRow, numberCol, letterCol)
+'НДС: в том числе
+
+Cells(numberRow, 1).Value = "В том числе НДС 20%"
+Cells(numberRow, numberCol).formula = "=round(" & letterCol & numberRow - 1 & "*20/120, 2)"
+Range("A" & numberRow & ":A" & numberRow).WrapText = False
+Call setFormat(numberRow, numberCol, numberRow, numberCol)
+
+End Sub
+
