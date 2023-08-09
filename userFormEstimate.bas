@@ -12,7 +12,6 @@ Dim signer As String 'ФИО утверждающего
 Dim position As String 'должность утверждающего
 Dim typeEstimate As String 'тип сметы: ТСН или СН
 Dim totalEstimate As New Collection 'номер строки итого по смете
-Dim approve As New Collection 'номер строки СОГЛАСОВАНО
 Dim namePosition As New Dictionary 'ключ:номер ЛОКАЛЬНАЯ СМЕТА № значение: наименование локальной сметы
 Dim nameLocation As Variant
 Dim smetaName As Variant
@@ -49,9 +48,14 @@ If totalEstimate.Count > 1 Then
         totalEstimate.Remove (i + 2)
     Next
 End If
+
 Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & totalEstimate(totalEstimate.Count) + 3).EntireRow.Insert
 Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете:" & smetaName(0)
-Call ndsTotal(totalEstimate(totalEstimate.Count), numberCol, letterCol)
+If answer = 6 Then
+    Call NDSIncluding(totalEstimate(totalEstimate.Count) + 1, numberCol, letterCol)
+Else
+    Call ndsTotal(totalEstimate(totalEstimate.Count), numberCol, letterCol)
+End If
 Call heightAdjustment(Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)))
 For Each item In totalEstimate
     Call cancelMerge(item)
@@ -158,23 +162,41 @@ seachStr = "Итого по*смете*"
 Set totalEstimate = Seach(seachStr, seachRange)
 Call quickSort(totalEstimate, 1, totalEstimate.Count)
 
-If numberEstimates > 1 Then
-    Range("A" & totalEstimate(1) + 1 & ":A" & approve(1) + 5).EntireRow.Hidden = False
-    Range("A" & totalEstimate(1) + 1 & ":A" & approve(1) + 5).EntireRow.Delete
-    totalEstimate.Add totalEstimate(2) - 11, , , 1
-    totalEstimate.Add totalEstimate(4) - 11, , , 2
-    totalEstimate.Remove (totalEstimate.Count)
-    totalEstimate.Remove (totalEstimate.Count)
-    Range("A" & totalEstimate(2) + 1 & ":A" & totalEstimate(3) - 1).EntireRow.Hidden = False
-    If (totalEstimate(3) - 1) - (totalEstimate(2) + 1) > 1 Then
-        Range("A" & totalEstimate(2) + 1 & ":A" & totalEstimate(3) - 1).EntireRow.Delete
-        totalEstimate.Add totalEstimate(3) - 2, , 3
-        totalEstimate.Remove (totalEstimate.Count)
+For i = 1 To totalEstimate.Count
+    If i = totalEstimate.Count Then
+        If numberEstimates = 1 Then
+            Range("A" & totalEstimate(i) & ":A" & lastRow).EntireRow.Delete
+            totalEstimate.Remove (totalEstimate.Count)
+        Else
+            Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Hidden = False
+            Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Delete
+        End If
+    Else
+        If numberEstimates > 1 Then
+            If i < numberEstimates Then
+                Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i)).EntireRow.Hidden = False
+                Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i)).EntireRow.Delete
+                totalEstimate.Add totalEstimate(i + 1) - ((nameLocation(i)) - (totalEstimate(i))), , , i
+                totalEstimate.Add totalEstimate(i + 3) - ((nameLocation(i)) - (totalEstimate(i))), , , i + 1
+                totalEstimate.Remove (totalEstimate.Count)
+               
+            Else
+                Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1)).EntireRow.Hidden = False
+                Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1) - 1).EntireRow.Delete
+                totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i
+                totalEstimate.Add totalEstimate(i + 3) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i + 1
+                totalEstimate.Remove (totalEstimate.Count)
+                totalEstimate.Remove (totalEstimate.Count)
+                totalEstimate.Remove (totalEstimate.Count)
+            End If
+        Else
+            Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1)).EntireRow.Hidden = False
+            Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1) - 1).EntireRow.Delete
+            totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i
+            totalEstimate.Remove (totalEstimate.Count)
+        End If
     End If
-
-End If
-Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & lastRow).EntireRow.Hidden = False
-Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & lastRow).EntireRow.Delete
+Next
 
 End Sub
 
@@ -226,11 +248,13 @@ Dim item As Variant
 Dim i As Variant
 
 Call activateSheet("Смета *")
-seachStr = "СОГЛАСОВАНО"
-Set approve = Seach(seachStr, seachRange)
-If approve.Count <> 0 Then
-    Rows("3:8").Delete
-End If
+
+For Each item In Range("A1:K" & lastRow)
+    If item Like "*СОГЛАСОВАНО*" Then
+        Rows("" & item.Row & ":" & item.Row + 5).Delete
+        
+    End If
+Next
 Rows("3:8").Insert
 signer = "Е.И. Новощинская"
 position = "Заместитель директора ГКУ г.Москвы " & Chr(34) & "Дирекция Мосприроды" & Chr(34)
@@ -297,6 +321,7 @@ Dim quiestion As String
 For Each item In Range("A1:K" & lastRow)
     If item Like "*ЛОКАЛЬНАЯ СМЕТА №*" Then
         namePosition.Add item.Row, Cells((item.Row + 3), item.Column).Value
+        
     End If
 Next
 
