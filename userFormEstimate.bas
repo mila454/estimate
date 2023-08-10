@@ -66,9 +66,6 @@ If typeEstimate = "ТСН" Then
     Call setFormat(totalEstimate(1), 9, totalEstimate(1) + 2, 9)
 End If
 
-
-
-
 End Sub
 
 Function seachLastCell()
@@ -317,6 +314,8 @@ Sub countEstimate()
 'определение количества смет и их наменований
 Dim item As Variant
 Dim quiestion As String
+
+Set namePosition = New Dictionary
 
 For Each item In Range("A1:K" & lastRow)
     If item Like "*ЛОКАЛЬНАЯ СМЕТА №*" Then
