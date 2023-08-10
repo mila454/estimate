@@ -13,9 +13,11 @@ Dim position As String 'должность утверждающего
 Dim typeEstimate As String 'тип сметы: ТСН или СН
 Dim totalEstimate As New Collection 'номер строки итого по смете
 Dim namePosition As New Dictionary 'ключ:номер ЛОКАЛЬНАЯ СМЕТА № значение: наименование локальной сметы
-Dim nameLocation As Variant
-Dim smetaName As Variant
-Dim numberEstimates As Integer
+Dim nameLocation As Variant 'номер ряда расположения наименования сметы
+Dim smetaName As Variant 'наименование сметы
+Dim numberEstimates As Integer 'количество смет
+Dim coefficientName As String 'наименование коэффициета
+Dim coefficient As Variant 'значение коэффициента
 
 Sub userFormEstimate()
 
@@ -40,7 +42,7 @@ If totalEstimate.Count > 1 Then
         Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)).Value = "Итого по локальной смете №" & i & ": " & smetaName(i - 1)
         Call heightAdjustment(Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)))
         If answer = 6 And Cells(totalEstimate(i), 1).Value Like "*Стоимость*посадочного*материала*" Then
-            Call NDSIncluding(totalEstimate(i) + 1, numberCol, letterCol)
+            Call NDSIncluding(totalEstimate(i) + 1)
         Else
             Call ndsTotal(totalEstimate(i), numberCol, letterCol)
         End If
@@ -52,7 +54,7 @@ End If
 Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & totalEstimate(totalEstimate.Count) + 3).EntireRow.Insert
 Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете:" & smetaName(0)
 If answer = 6 Then
-    Call NDSIncluding(totalEstimate(totalEstimate.Count) + 1, numberCol, letterCol)
+    Call NDSIncluding(totalEstimate(totalEstimate.Count) + 1)
 Else
     Call ndsTotal(totalEstimate(totalEstimate.Count), numberCol, letterCol)
 End If
@@ -65,6 +67,8 @@ If typeEstimate = "ТСН" Then
     Call ndsTotal(totalEstimate(1), 9, "I")
     Call setFormat(totalEstimate(1), 9, totalEstimate(1) + 2, 9)
 End If
+
+Call finishOrGoToMainMenu
 
 End Sub
 
@@ -358,13 +362,68 @@ Columns(letterCol & ":" & letterCol).EntireColumn.AutoFit
 
 End Sub
 
-Sub NDSIncluding(numberRow, numberCol, letterCol)
+Sub NDSIncluding(numberRow)
 'НДС: в том числе
 
 Cells(numberRow, 1).Value = "В том числе НДС 20%"
 Cells(numberRow, numberCol).formula = "=round(" & letterCol & numberRow - 1 & "*20/120, 2)"
 Range("A" & numberRow & ":A" & numberRow).WrapText = False
 Call setFormat(numberRow, numberCol, numberRow, numberCol)
+
+End Sub
+
+Sub finishOrGoToMainMenu()
+'закончить оформление сметы или перейти в основное меню
+Dim passing As Integer
+
+passing = MsgBox("Нажмите OK для продолжения оформления сметы или Cancel для завершения", vbOKCancel)
+
+If passing = 1 Then
+    Call userFormEstimate
+Else
+    Exit Sub
+End If
+
+End Sub
+
+Sub coefBudgetFinancing()
+
+coefficientName = "коэффициентом бюджетного финансирования"
+Call completeAddCoef
+
+End Sub
+
+Sub addCoef(numberRow)
+'добавление формулы для коэффициента
+Rows((numberRow + 1) & ":" & (numberRow + 2)).Insert
+
+Cells(numberRow + 1, 1).Value = "Итого с " & coefficientName & " K =" & coefficient
+Cells(numberRow + 1, numberCol).formula = "=round(" & letterCol & numberRow & "*" & coefficient & ",2)"
+Call NDSIncluding(numberRow + 2)
+
+End Sub
+
+Sub completeAddCoef()
+'добавление коэффициента
+Dim item As Variant
+
+
+If typeEstimate = "" Then
+    Call determinationEstimateType
+End If
+
+Call activateSheet("*Смета*")
+lastRow = seachLastCell() + 1
+
+coefficient = InputBox("Перейдите на английский и введите значение коэффициента")
+
+For Each item In Range("A1:" & letterCol & lastRow)
+    If item.Value Like "*Итого с НДС*" Or item.Value Like "В том числе НДС*" Then
+        Call addCoef(item.Row)
+    End If
+Next
+
+Call activateSheet("ПНЦ")
 
 End Sub
 

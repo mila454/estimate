@@ -57,6 +57,12 @@ Private Sub TSNOptionButton_Click()
 
 End Sub
 
+Private Sub financeCheckBox_Click()
+
+Call coefBudgetFinancing
+
+End Sub
+
 Private Sub UserForm_Initialize()
 
 
