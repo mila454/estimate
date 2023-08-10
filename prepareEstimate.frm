@@ -33,9 +33,15 @@ Next
 End Sub
 
 Private Sub estimateCommandButton_Click()
+
 prepareEstimate.Hide
+
 If NDSCheckBox.Value = True Then
     Call userFormEstimate.nds
+End If
+
+If financeCheckBox.Value = True Then
+    Call coefBudgetFinancing
 End If
 
 End Sub
@@ -44,24 +50,6 @@ Private Sub exitCommandButton_Click()
 Unload prepareEstimate
 End Sub
 
-
-Private Sub SNOptionButton_Click()
-
-
-
-End Sub
-
-Private Sub TSNOptionButton_Click()
-
-
-
-End Sub
-
-Private Sub financeCheckBox_Click()
-
-Call coefBudgetFinancing
-
-End Sub
 
 Private Sub UserForm_Initialize()
 
