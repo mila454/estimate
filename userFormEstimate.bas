@@ -12,6 +12,7 @@ Dim signer As String 'ФИО утверждающего
 Dim position As String 'должность утверждающего
 Dim typeEstimate As String 'тип сметы: ТСН или СН
 Dim totalEstimate As New Collection 'номер строки итого по смете
+Dim rowForCoefficient As New Collection 'номер строки для вывода коэффициента
 Dim namePosition As New Dictionary 'ключ:номер ЛОКАЛЬНАЯ СМЕТА № значение: наименование локальной сметы
 Dim nameLocation As Variant 'номер ряда расположения наименования сметы
 Dim smetaName As Variant 'наименование сметы
@@ -405,22 +406,26 @@ End Sub
 
 Sub completeAddCoef()
 'добавление коэффициента
-Dim item As Variant
+Dim i As Variant
 
 
 If typeEstimate = "" Then
     Call determinationEstimateType
 End If
 
-Call activateSheet("*Смета*")
-lastRow = seachLastCell() + 1
-
 coefficient = InputBox("Перейдите на английский и введите значение коэффициента")
 
-For Each item In Range("A1:" & letterCol & lastRow)
-    If item.Value Like "*Итого с НДС*" Or item.Value Like "В том числе НДС*" Then
-        Call addCoef(item.Row)
-    End If
+Call activateSheet("*Смета*")
+If lastRow = 0 Then lastRow = seachLastCell() + 1
+
+Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
+seachStr = "?????* НДС*"
+Set rowForCoefficient = Seach(seachStr, seachRange)
+Call quickSort(rowForCoefficient, 1, rowForCoefficient.Count)
+
+For i = 0 To rowForCoefficient.Count - 1
+    Call addCoef(rowForCoefficient(i + 1) + i * 2)
+    
 Next
 
 Call activateSheet("ПНЦ")
