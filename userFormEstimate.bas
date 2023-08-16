@@ -13,9 +13,8 @@ Dim position As String 'должность утверждающего
 Dim typeEstimate As String 'тип сметы: ТСН или СН
 Dim totalEstimate As New Collection 'номер строки итого по смете
 Dim rowForCoefficient As New Collection 'номер строки для вывода коэффициента
-Dim namePosition As New Dictionary 'ключ:номер ЛОКАЛЬНАЯ СМЕТА № значение: наименование локальной сметы
-Dim nameLocation As Variant 'номер ряда расположения наименования сметы
-Dim smetaName As Variant 'наименование сметы
+Dim nameLocation() As String 'номер ряда расположения наименования сметы
+Dim smetaName() As String 'наименование сметы
 Dim numberEstimates As Integer 'количество смет
 Dim coefficientName As String 'наименование коэффициета
 Dim coefficient As Variant 'значение коэффициента
@@ -104,7 +103,7 @@ Dim firstFoundCell As Range
 
 Set Seach = New Collection
 
-Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues)
+Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues, MatchCase:=True)
 Set firstFoundCell = foundCell
 
 If firstFoundCell Is Nothing Then
@@ -167,7 +166,7 @@ Call quickSort(totalEstimate, 1, totalEstimate.Count)
 For i = 1 To totalEstimate.Count
     If i = totalEstimate.Count Then
         If numberEstimates = 1 Then
-            Range("A" & totalEstimate(i) & ":A" & lastRow).EntireRow.Delete
+            Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Delete
             totalEstimate.Remove (totalEstimate.Count)
         Else
             Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Hidden = False
@@ -317,29 +316,36 @@ End Sub
 
 Sub countEstimate()
 'определение количества смет и их наменований
+Dim i As Variant
 Dim item As Variant
 Dim quiestion As String
-
-Set namePosition = New Dictionary
+Dim tempLocation As String
+Dim tempName As String
 
 For Each item In Range("A1:K" & lastRow)
     If item Like "*ЛОКАЛЬНАЯ СМЕТА №*" Then
-        namePosition.Add item.Row, Cells((item.Row + 3), item.Column).Value
-        
+         tempLocation = tempLocation & " " & item.Row
     End If
 Next
+nameLocation = Split(tempLocation, " ")
 
-item = ""
+Sheets("Source").Activate
+For i = 1 To lastRow
+    If Cells(i, 6).HasFormula = False And Cells(i, 6).Value = "Новая локальная смета" Then
+        tempName = tempName & ";" & Cells(i, 7).Value
+    End If
+Next
+smetaName = Split(tempName, ";")
 
-nameLocation = namePosition.Keys
-smetaName = namePosition.Items
-numberEstimates = UBound(smetaName) + 1
 For Each item In smetaName
     If item Like "*Стоимость*посадочного*материала" Then
         quiestion = "В смете: " & item & " НДС в том числе?"
         answer = MsgBox(quiestion, vbYesNo)
     End If
 Next
+
+numberEstimates = UBound(smetaName) + 1
+
 End Sub
 
 Sub cancelMerge(numberRow)
