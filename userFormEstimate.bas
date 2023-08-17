@@ -52,13 +52,13 @@ If totalEstimate.Count > 1 Then
 End If
 
 Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & totalEstimate(totalEstimate.Count) + 3).EntireRow.Insert
-Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете:" & smetaName(0)
+Range("A" & totalEstimate(totalEstimate.Count) & ":G" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете: " & smetaName(0)
 If answer = 6 Then
     Call NDSIncluding(totalEstimate(totalEstimate.Count) + 1)
 Else
     Call ndsTotal(totalEstimate(totalEstimate.Count), numberCol, letterCol)
 End If
-Call heightAdjustment(Range("A" & totalEstimate(totalEstimate.Count) & ":H" & totalEstimate(totalEstimate.Count)))
+Call heightAdjustment(Range("A" & totalEstimate(totalEstimate.Count) & ":G" & totalEstimate(totalEstimate.Count)))
 For Each item In totalEstimate
     Call cancelMerge(item)
 Next
@@ -167,7 +167,7 @@ For i = 1 To totalEstimate.Count
     If i = totalEstimate.Count Then
         If numberEstimates = 1 Then
             Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Delete
-            totalEstimate.Remove (totalEstimate.Count)
+            
         Else
             Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Hidden = False
             Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Delete
@@ -275,10 +275,10 @@ End With
 Call heightAdjustment(Range("B6:D6"))
 Call countEstimate
 
-For i = 0 To numberEstimates - 1
-    Cells(nameLocation(i) + 3, 1).Value = Cells(nameLocation(i), 1).Value & i + 1
-    Cells(nameLocation(i) + 5, 1).Value = smetaName(i)
-    Range(Cells(nameLocation(i), 1), Cells(nameLocation(i) + 1, numberCol + 1)).Clear
+For i = 1 To numberEstimates
+    Cells(nameLocation(i - 1) + 3, 1).Value = Cells(nameLocation(i - 1), 1).Value & i + 1
+    Cells(nameLocation(i - 1) + 5, 1).Value = smetaName(i - 1)
+    Range(Cells(nameLocation(i - 1), 1), Cells(nameLocation(i - 1) + 1, numberCol + 1)).Clear
 Next
 
 Call heightAdjustment(Range("A10:K10"))
@@ -324,17 +324,19 @@ Dim tempName As String
 
 For Each item In Range("A1:K" & lastRow)
     If item Like "*ЛОКАЛЬНАЯ СМЕТА №*" Then
-         tempLocation = tempLocation & " " & item.Row
+         tempLocation = tempLocation & item.Row & " "
     End If
 Next
+tempLocation = Trim(tempLocation)
 nameLocation = Split(tempLocation, " ")
 
 Sheets("Source").Activate
 For i = 1 To lastRow
     If Cells(i, 6).HasFormula = False And Cells(i, 6).Value = "Новая локальная смета" Then
-        tempName = tempName & ";" & Cells(i, 7).Value
+        tempName = tempName & Cells(i, 7).Value & ";"
     End If
 Next
+tempName = Trim(tempName)
 smetaName = Split(tempName, ";")
 
 For Each item In smetaName
@@ -344,7 +346,7 @@ For Each item In smetaName
     End If
 Next
 
-numberEstimates = UBound(smetaName) + 1
+numberEstimates = UBound(nameLocation) + 1
 
 End Sub
 
