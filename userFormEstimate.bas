@@ -36,7 +36,7 @@ Call determinationEstimateType
 Call header
 Call clearTail
 
-If totalEstimate.Count > 1 Then
+If numberEstimates > 1 Then
     For i = 1 To totalEstimate.Count - 1
         Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i) + 3).EntireRow.Insert
         Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)).Value = "Итого по локальной смете №" & i & ": " & smetaName(i - 1)
