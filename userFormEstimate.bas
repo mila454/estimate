@@ -1,6 +1,11 @@
 Attribute VB_Name = "userFormEstimate"
 Option Explicit
 
+Public simpleFrameList(3)
+Public complexFrameList(5)
+Public executionFrameList(2)
+Public typesOfWorksFrameList(5)
+
 Dim lastRow As Integer
 Dim seachRange As Range
 Dim seachStr As String
@@ -119,7 +124,7 @@ Loop While foundCell.Address <> firstFoundCell.Address
 End Function
 
 Sub quickSort(coll As Collection, first As Long, last As Long)
-'быстрая сортировка элеиентов коллекции
+'быстрая сортировка элементов коллекции
 Dim centreVal As Variant, temp As Variant
 Dim low As Long
 Dim high As Long

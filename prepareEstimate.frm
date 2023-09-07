@@ -13,11 +13,20 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 
 
-Private Sub cancelCommandButton_Click()
+Private Sub care1TextBox_Change()
+
+End Sub
+
+Private Sub care2TextBox_Change()
+
+End Sub
+
+Private Sub clearCommandButton_Click()
 Dim element As Variant
 
 For Each element In prepareEstimate.Controls
@@ -33,16 +42,47 @@ Next
 End Sub
 
 Private Sub estimateCommandButton_Click()
-
+Dim ctr As Control
+Dim i As Variant
+i = 0
 prepareEstimate.Hide
 
-If NDSCheckBox.Value = True Then
-    Call userFormEstimate.nds
-End If
+For Each ctr In prepareEstimate.simpleFrame.Controls
+    If ctr.Value = True Then
+        simpleFrameList(i) = ctr.Name
+    End If
+    i = i + 1
+Next
+i = 0
+For Each ctr In prepareEstimate.complexFrame.Controls
+    If ctr.Value = True Then
+        complexFrameList(i) = ctr.Name
+    End If
+    i = i + 1
+Next
+i = 0
+For Each ctr In prepareEstimate.executionFrame.Controls
+    If ctr.Value = True Then
+        executionFrameList(i) = ctr.Name
+    End If
+    i = i + 1
+Next
+i = 0
+For Each ctr In prepareEstimate.typesOfWorksFrame.Controls
+    If TypeOf ctr Is MSForms.Label Then
+        GoTo continue
+    ElseIf TypeOf ctr Is MSForms.TextBox And ctr.text <> "" Then
+        typesOfWorksFrameList(i) = ctr.text
+    End If
+    i = i + 1
+continue: Next
+'If NDSOptionButton.Value = True Then
+'    Call userFormEstimate.nds
+'End If
 
-If financeCheckBox.Value = True Then
-    Call coefBudgetFinancing
-End If
+'If financeCheckBox.Value = True Then
+'    Call coefBudgetFinancing
+'End If
 
 End Sub
 
@@ -50,6 +90,18 @@ Private Sub exitCommandButton_Click()
 Unload prepareEstimate
 End Sub
 
+
+Private Sub OptionButton1_Click()
+
+End Sub
+
+Private Sub simplePrepareFrame_Click()
+
+End Sub
+
+Private Sub plantingLabel_Click()
+
+End Sub
 
 Private Sub UserForm_Initialize()
 
