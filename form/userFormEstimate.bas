@@ -1,4 +1,4 @@
-Attribute VB_Name = "form/userFormEstimate"
+Attribute VB_Name = "userFormEstimate"
 Option Explicit
 
 Public simpleFrameList(3)
@@ -12,17 +12,17 @@ Dim seachStr As String
 Dim letterCol As String
 Dim numberCol As Integer
 Dim currYear As Integer
-Dim answer As Variant 'Г®ГІГўГҐГІ Г­Г  ГўГ®ГЇГ°Г®Г± Г®ГЎ ГЌГ„Г‘ Гў ГІГ®Г¬ Г·ГЁГ±Г«ГҐ
-Dim signer As String 'Г”Г€ГЋ ГіГІГўГҐГ°Г¦Г¤Г ГѕГ№ГҐГЈГ®
-Dim position As String 'Г¤Г®Г«Г¦Г­Г®Г±ГІГј ГіГІГўГҐГ°Г¦Г¤Г ГѕГ№ГҐГЈГ®
-Dim typeEstimate As String 'ГІГЁГЇ Г±Г¬ГҐГІГ»: Г’Г‘ГЌ ГЁГ«ГЁ Г‘ГЌ
-Dim totalEstimate As New Collection 'Г­Г®Г¬ГҐГ° Г±ГІГ°Г®ГЄГЁ ГЁГІГ®ГЈГ® ГЇГ® Г±Г¬ГҐГІГҐ
-Dim rowForCoefficient As New Collection 'Г­Г®Г¬ГҐГ° Г±ГІГ°Г®ГЄГЁ Г¤Г«Гї ГўГ»ГўГ®Г¤Г  ГЄГ®ГЅГґГґГЁГ¶ГЁГҐГ­ГІГ 
-Dim nameLocation() As String 'Г­Г®Г¬ГҐГ° Г°ГїГ¤Г  Г°Г Г±ГЇГ®Г«Г®Г¦ГҐГ­ГЁГї Г­Г ГЁГ¬ГҐГ­Г®ГўГ Г­ГЁГї Г±Г¬ГҐГІГ»
-Dim smetaName() As String 'Г­Г ГЁГ¬ГҐГ­Г®ГўГ Г­ГЁГҐ Г±Г¬ГҐГІГ»
-Dim numberEstimates As Integer 'ГЄГ®Г«ГЁГ·ГҐГ±ГІГўГ® Г±Г¬ГҐГІ
-Dim coefficientName As String 'Г­Г ГЁГ¬ГҐГ­Г®ГўГ Г­ГЁГҐ ГЄГ®ГЅГґГґГЁГ¶ГЁГҐГІГ 
-Dim coefficient As Variant 'Г§Г­Г Г·ГҐГ­ГЁГҐ ГЄГ®ГЅГґГґГЁГ¶ГЁГҐГ­ГІГ 
+Dim answer As Variant 'ответ на вопрос об НДС в том числе
+Dim signer As String 'ФИО утверждающего
+Dim position As String 'должность утверждающего
+Dim typeEstimate As String 'тип сметы: ТСН или СН
+Dim totalEstimate As New Collection 'номер строки итого по смете
+Dim rowForCoefficient As New Collection 'номер строки для вывода коэффициента
+Dim nameLocation() As String 'номер ряда расположения наименования сметы
+Dim smetaName() As String 'наименование сметы
+Dim numberEstimates As Integer 'количество смет
+Dim coefficientName As String 'наименование коэффициета
+Dim coefficient As Variant 'значение коэффициента
 
 Sub userFormEstimate()
 
@@ -34,7 +34,7 @@ Sub nds()
 Dim i As Variant
 Dim item As Variant
 
-Call activateSheet("Г‘Г¬ГҐГІГ  *")
+Call activateSheet("Смета *")
 lastRow = seachLastCell() + 1
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
 Call determinationEstimateType
@@ -44,9 +44,9 @@ Call clearTail
 If numberEstimates > 1 Then
     For i = 1 To totalEstimate.Count - 1
         Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i) + 3).EntireRow.Insert
-        Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)).Value = "Г€ГІГ®ГЈГ® ГЇГ® Г«Г®ГЄГ Г«ГјГ­Г®Г© Г±Г¬ГҐГІГҐ В№" & i & ": " & smetaName(i - 1)
+        Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)).Value = "Итого по локальной смете №" & i & ": " & smetaName(i - 1)
         Call heightAdjustment(Range("A" & totalEstimate(i) & ":H" & totalEstimate(i)))
-        If answer = 6 And Cells(totalEstimate(i), 1).Value Like "*Г‘ГІГ®ГЁГ¬Г®Г±ГІГј*ГЇГ®Г±Г Г¤Г®Г·Г­Г®ГЈГ®*Г¬Г ГІГҐГ°ГЁГ Г«Г *" Then
+        If answer = 6 And Cells(totalEstimate(i), 1).Value Like "*Стоимость*посадочного*материала*" Then
             Call NDSIncluding(totalEstimate(i) + 1)
         Else
             Call ndsTotal(totalEstimate(i), numberCol, letterCol)
@@ -57,7 +57,7 @@ If numberEstimates > 1 Then
 End If
 
 Range("A" & totalEstimate(totalEstimate.Count) + 1 & ":A" & totalEstimate(totalEstimate.Count) + 3).EntireRow.Insert
-Range("A" & totalEstimate(totalEstimate.Count) & ":G" & totalEstimate(totalEstimate.Count)).Value = "Г€ГІГ®ГЈГ® ГЇГ® Г±Г¬ГҐГІГҐ: " & smetaName(0)
+Range("A" & totalEstimate(totalEstimate.Count) & ":G" & totalEstimate(totalEstimate.Count)).Value = "Итого по смете: " & smetaName(0)
 If answer = 6 Then
     Call NDSIncluding(totalEstimate(totalEstimate.Count) + 1)
 Else
@@ -68,17 +68,21 @@ For Each item In totalEstimate
     Call cancelMerge(item)
 Next
 
-If typeEstimate = "Г’Г‘ГЌ" Then
+If typeEstimate = "ТСН" Then
     Call ndsTotal(totalEstimate(1), 9, "I")
     Call setFormat(totalEstimate(1), 9, totalEstimate(1) + 2, 9)
 End If
 
-Call finishOrGoToMainMenu
+For i = LBound(simpleFrameList) To UBound(simpleFrameList)
+        If simpleFrameList(i) = "financeCheckBox" Then
+            Call coefBudgetFinancing
+        End If
+Next
 
 End Sub
 
 Function seachLastCell()
-' ГЇГ®ГЁГ±ГЄ ГЇГ®Г±Г«ГҐГ¤Г­ГҐГ© Г­ГҐГЇГіГ±ГІГ®Г© ГїГ·ГҐГ©ГЄГЁ Гў Г±ГІГ®Г«ГЎГ¶Г Гµ Г± 1-ГЈГ® ГЇГ® 11-Г©
+' поиск последней непустой ячейки в столбцах с 1-го по 11-й
     Dim c(11) As Integer
     Dim i As Variant
     
@@ -89,7 +93,7 @@ Function seachLastCell()
 End Function
 
 Sub activateSheet(sheetName)
-' Г ГЄГІГЁГўГЁГ°Г®ГўГ Г­ГЁГҐ Г«ГЁГ±ГІГ 
+' активирование листа
 Dim currSheet As Variant
 
 For Each currSheet In Worksheets
@@ -102,7 +106,7 @@ Next
 End Sub
 
 Function Seach(seachStr, seachRange) As Collection
-'ГЇГ®ГЁГ±ГЄ ГЇГ® Г±ГІГ°Г®ГЄГҐ ГЁ Г±Г®ГµГ°Г Г­ГҐГ­ГЁГҐ Г­Г®Г¬ГҐГ°Г  Г°ГїГ¤Г  Гў ГЄГ®Г«Г«ГҐГЄГ¶ГЁГѕ
+'поиск по строке и сохранение номера ряда в коллекцию
 Dim foundCell As Range
 Dim firstFoundCell As Range
 
@@ -112,7 +116,7 @@ Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues, MatchCase:=True)
 Set firstFoundCell = foundCell
 
 If firstFoundCell Is Nothing Then
-    MsgBox (seachStr & " Г­ГҐ Г­Г Г©Г¤ГҐГ­Г®")
+    MsgBox (seachStr & " не найдено")
     Exit Function
 End If
 
@@ -124,7 +128,7 @@ Loop While foundCell.Address <> firstFoundCell.Address
 End Function
 
 Sub quickSort(coll As Collection, first As Long, last As Long)
-'ГЎГ»Г±ГІГ°Г Гї Г±Г®Г°ГІГЁГ°Г®ГўГЄГ  ГЅГ«ГҐГ¬ГҐГ­ГІГ®Гў ГЄГ®Г«Г«ГҐГЄГ¶ГЁГЁ
+'быстрая сортировка элементов коллекции
 Dim centreVal As Variant, temp As Variant
 Dim low As Long
 Dim high As Long
@@ -143,13 +147,13 @@ Do While low <= high
         high = high - 1
     Loop
     If low <= high Then
-    ' ГЏГ®Г¬ГҐГ­ГїГІГј Г§Г­Г Г·ГҐГ­ГЁГї
+    ' Поменять значения
         temp = coll(low)
         coll.Add coll(high), After:=low
         coll.Remove low
         coll.Add temp, Before:=high
         coll.Remove high + 1
-        ' ГЏГҐГ°ГҐГ©ГІГЁ ГЄ Г±Г«ГҐГ¤ГіГѕГ№ГЁГ¬ ГЇГ®Г§ГЁГ¶ГЁГїГ¬
+        ' Перейти к следующим позициям
         low = low + 1
         high = high - 1
     End If
@@ -159,12 +163,12 @@ Do While low <= high
 End Sub
 
 Sub clearTail()
-'Г®Г·ГЁГ±ГІГЄГ , ГіГ¤Г Г«ГҐГ­ГЁГҐ Г®ГЎГєГҐГ¤ГЁГ­ГҐГ­ГЁГї Г¬ГҐГ¦Г¤Гі Г€ГІГ®ГЈГ® ГЇГ® Г«Г®ГЄГ Г«ГјГ­Г®Г© Г±Г¬ГҐГІГҐ... ГЁ Г‘Г®Г±ГІГ ГўГЁГ«-ГЏГ°Г®ГўГҐГ°ГЁГ«
+'очистка, удаление объединения между Итого по локальной смете... и Составил-Проверил
 Dim i As Variant
 
-Call activateSheet("Г‘Г¬ГҐГІГ  *")
+Call activateSheet("Смета *")
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 9))
-seachStr = "Г€ГІГ®ГЈГ® ГЇГ®*Г±Г¬ГҐГІГҐ*"
+seachStr = "Итого по*смете*"
 Set totalEstimate = Seach(seachStr, seachRange)
 Call quickSort(totalEstimate, 1, totalEstimate.Count)
 
@@ -207,11 +211,11 @@ Next
 End Sub
 
 Sub ndsTotal(r, numberCol, letterCol)
-'Г°Г Г±Г·ГҐГІ ГЁ ГўГ»ГўГ®Г¤ ГЌГ„Г‘ ГЁ ГЁГІГ®ГЈГ® Г± ГЌГ„Г‘
+'расчет и вывод НДС и итого с НДС
 
-Cells(r + 1, 1).Value = "ГЌГ„Г‘ 20%"
+Cells(r + 1, 1).Value = "НДС 20%"
 Cells(r + 1, numberCol).formula = "=round(" & letterCol & r & "*0.2,2)"
-Cells(r + 2, 1) = "Г€ГІГ®ГЈГ® Г± ГЌГ„Г‘ 20%"
+Cells(r + 2, 1) = "Итого с НДС 20%"
 Cells(r + 2, numberCol).formula = "=" & letterCol & r & "+" & letterCol & (r + 1)
 Range("A" & r + 1 & ":A" & r + 2).WrapText = False
 Call setFormat(r, numberCol, r + 2, numberCol)
@@ -219,7 +223,7 @@ Call setFormat(r, numberCol, r + 2, numberCol)
 End Sub
 
 Sub setFormat(row1Format, col1Format, row2Format, col2Format)
-'ГґГ®Г°Г¬Г ГІГЁГ°Г®ГўГ Г­ГЁГҐ Г¤ГЁГ ГЇГ Г§Г®Г­Г 
+'форматирование диапазона
 With Range(Cells(row1Format, col1Format), Cells(row2Format, col2Format))
     .Font.Bold = True
     .NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
@@ -228,18 +232,18 @@ End With
 End Sub
 
 Sub determinationEstimateType()
-'Г®ГЇГ°ГҐГ¤ГҐГ«ГҐГ­ГЁГҐ ГІГЁГЇГ  Г±Г¬ГҐГІГ»: Г’Г‘ГЌ ГЁГ«ГЁ Г‘ГЌ
+'определение типа сметы: ТСН или СН
 Dim currSheet As Variant
 
-sheetName = "Г‘Г¬ГҐГІГ *"
+sheetName = "Смета*"
 For Each currSheet In Worksheets
     If currSheet.Name Like sheetName Then
-        If InStr(currSheet.Name, "Г’Г‘ГЌ") = 0 Then
-            typeEstimate = "Г‘ГЌ"
+        If InStr(currSheet.Name, "ТСН") = 0 Then
+            typeEstimate = "СН"
             numberCol = 10
             letterCol = "J"
         Else
-            typeEstimate = "Г’Г‘ГЌ"
+            typeEstimate = "ТСН"
             numberCol = 11
             letterCol = "K"
         End If
@@ -249,28 +253,28 @@ Next
 End Sub
 
 Sub header()
-'Г”Г®Г°Г¬ГЁГ°Г®ГўГ Г­ГЁГҐ ГёГ ГЇГЄГЁ, Г­Г ГЁГ¬ГҐГ­Г®ГўГ Г­ГЁГї Г±Г¬ГҐГІГ»
+'Формирование шапки, наименования сметы
 Dim item As Variant
 Dim i As Variant
 
-Call activateSheet("Г‘Г¬ГҐГІГ  *")
+Call activateSheet("Смета *")
 
 For Each item In Range("A1:K" & lastRow)
-    If item Like "*Г‘ГЋГѓГ‹ГЂГ‘ГЋГ‚ГЂГЌГЋ*" Then
+    If item Like "*СОГЛАСОВАНО*" Then
         Rows("" & item.Row & ":" & item.Row + 5).Delete
         
     End If
 Next
 Rows("3:8").Insert
-signer = "Г….Г€. ГЌГ®ГўГ®Г№ГЁГ­Г±ГЄГ Гї"
-position = "Г‡Г Г¬ГҐГ±ГІГЁГІГҐГ«Гј Г¤ГЁГ°ГҐГЄГІГ®Г°Г  ГѓГЉГ“ ГЈ.ГЊГ®Г±ГЄГўГ» " & Chr(34) & "Г„ГЁГ°ГҐГЄГ¶ГЁГї ГЊГ®Г±ГЇГ°ГЁГ°Г®Г¤Г»" & Chr(34)
-Cells(3, 3) = Chr(34) & "Г“Г’Г‚Г…ГђГ†Г„ГЂГћ" & Chr(34)
+signer = "Е.И. Новощинская"
+position = "Заместитель директора ГКУ г.Москвы " & Chr(34) & "Дирекция Мосприроды" & Chr(34)
+Cells(3, 3) = Chr(34) & "УТВЕРЖДАЮ" & Chr(34)
 Cells(3, 3).HorizontalAlignment = xlLeft
-Cells(5, 2) = "Г‡Г ГЄГ Г§Г·ГЁГЄ:"
+Cells(5, 2) = "Заказчик:"
 Cells(6, 2) = position
 Cells(7, 2) = "_________________________ " & signer
 currYear = Format(Date, "yyyy")
-Cells(8, 2) = Chr(34) & "_____" & Chr(34) & "___________________ " & currYear & " ГЈ."
+Cells(8, 2) = Chr(34) & "_____" & Chr(34) & "___________________ " & currYear & " г."
 Cells(3, 3).Font.Bold = True
 With Range("B6:E6, B7:D7, B8:D8")
     .MergeCells = True
@@ -299,14 +303,14 @@ End With
 End Sub
 
 Sub heightAdjustment(mergedRange)
-'Г ГўГІГ®ГЇГ®Г¤ГЎГ®Г° ГўГ»Г±Г®ГІГ» Г®ГЎГєГҐГ¤ГЁГ­ГҐГ­Г­Г»Гµ ГїГ·ГҐГҐГЄ
+'автоподбор высоты объединенных ячеек
 Dim myCell As Range, myLen As Integer, _
 myWidth As Single, k As Single, n As Single
 
 With mergedRange
-    'Г‡Г Г¤Г ГҐГ¬ Г®ГЎГєГҐГ¤ГЁГ­ГҐГ­Г­Г®Г© ГїГ·ГҐГ©ГЄГҐ ГЇГҐГ°ГҐГ­Г®Г± ГІГҐГЄГ±ГІГ 
+    'Задаем объединенной ячейке перенос текста
     .WrapText = True
-    'Г‡Г Г¤Г ГҐГ¬ Г®ГЎГєГҐГ¤ГЁГ­ГҐГ­Г­Г®Г© ГїГ·ГҐГ©ГЄГҐ ГІГ ГЄГіГѕ ГўГ»Г±Г®ГІГі Г±ГІГ°Г®ГЄГЁ, Г·ГІГ®ГЎГ» ГіГ¬ГҐГ№Г Г«Г Г±Гј Г®Г¤Г­Г  Г±ГІГ°Г®ГЄГ  ГІГҐГЄГ±ГІГ 
+    'Задаем объединенной ячейке такую высоту строки, чтобы умещалась одна строка текста
     .RowHeight = Cells(mergedRange.Row, mergedRange.Column).Font.Size * 1.3
 End With
 myLen = Len(CStr(Cells(mergedRange.Row, mergedRange.Column)))
@@ -320,7 +324,7 @@ mergedRange.RowHeight = mergedRange.RowHeight * WorksheetFunction.RoundUp(myLen 
 End Sub
 
 Sub countEstimate()
-'Г®ГЇГ°ГҐГ¤ГҐГ«ГҐГ­ГЁГҐ ГЄГ®Г«ГЁГ·ГҐГ±ГІГўГ  Г±Г¬ГҐГІ ГЁ ГЁГµ Г­Г Г¬ГҐГ­Г®ГўГ Г­ГЁГ©
+'определение количества смет и их наменований
 Dim i As Variant
 Dim item As Variant
 Dim quiestion As String
@@ -328,7 +332,7 @@ Dim tempLocation As String
 Dim tempName As String
 
 For Each item In Range("A1:K" & lastRow)
-    If item Like "*Г‹ГЋГЉГЂГ‹ГњГЌГЂГџ Г‘ГЊГ…Г’ГЂ В№*" Then
+    If item Like "*ЛОКАЛЬНАЯ СМЕТА №*" Then
          tempLocation = tempLocation & item.Row & " "
     End If
 Next
@@ -337,7 +341,7 @@ nameLocation = Split(tempLocation, " ")
 
 Sheets("Source").Activate
 For i = 1 To lastRow
-    If Cells(i, 6).HasFormula = False And Cells(i, 6).Value = "ГЌГ®ГўГ Гї Г«Г®ГЄГ Г«ГјГ­Г Гї Г±Г¬ГҐГІГ " Then
+    If Cells(i, 6).HasFormula = False And Cells(i, 6).Value = "Новая локальная смета" Then
         tempName = tempName & Cells(i, 7).Value & ";"
     End If
 Next
@@ -345,8 +349,8 @@ tempName = Trim(tempName)
 smetaName = Split(tempName, ";")
 
 For Each item In smetaName
-    If item Like "*Г‘ГІГ®ГЁГ¬Г®Г±ГІГј*ГЇГ®Г±Г Г¤Г®Г·Г­Г®ГЈГ®*Г¬Г ГІГҐГ°ГЁГ Г«Г " Then
-        quiestion = "Г‚ Г±Г¬ГҐГІГҐ: " & item & " ГЌГ„Г‘ Гў ГІГ®Г¬ Г·ГЁГ±Г«ГҐ?"
+    If item Like "*Стоимость*посадочного*материала" Then
+        quiestion = "В смете: " & item & " НДС в том числе?"
         answer = MsgBox(quiestion, vbYesNo)
     End If
 Next
@@ -356,9 +360,9 @@ numberEstimates = UBound(nameLocation) + 1
 End Sub
 
 Sub cancelMerge(numberRow)
-'Г®ГІГ¬ГҐГ­Г  Г®ГЎГєГҐГ¤ГЁГ­ГҐГ­ГЁГї ГїГ·ГҐГҐГЄ ГЁ ГЇГҐГ°ГҐГ­Г®Г± ГґГ®Г°Г¬ГіГ«Г»
+'отмена объединения ячеек и перенос формулы
 
-If typeEstimate = "Г’Г‘ГЌ" Then
+If typeEstimate = "ТСН" Then
     Range("H" & numberRow & ":I" & numberRow).UnMerge
     Cells(numberRow, 9).formula = Cells(numberRow, 8).formula
     Cells(numberRow, 8).Clear
@@ -377,62 +381,50 @@ Columns(letterCol & ":" & letterCol).EntireColumn.AutoFit
 End Sub
 
 Sub NDSIncluding(numberRow)
-'ГЌГ„Г‘: Гў ГІГ®Г¬ Г·ГЁГ±Г«ГҐ
+'НДС: в том числе
 
-Cells(numberRow, 1).Value = "Г‚ ГІГ®Г¬ Г·ГЁГ±Г«ГҐ ГЌГ„Г‘ 20%"
+Cells(numberRow, 1).Value = "В том числе НДС 20%"
 Cells(numberRow, numberCol).formula = "=round(" & letterCol & numberRow - 1 & "*20/120, 2)"
 Range("A" & numberRow & ":A" & numberRow).WrapText = False
 Call setFormat(numberRow, numberCol, numberRow, numberCol)
 
 End Sub
 
-Sub finishOrGoToMainMenu()
-'Г§Г ГЄГ®Г­Г·ГЁГІГј Г®ГґГ®Г°Г¬Г«ГҐГ­ГЁГҐ Г±Г¬ГҐГІГ» ГЁГ«ГЁ ГЇГҐГ°ГҐГ©ГІГЁ Гў Г®Г±Г­Г®ГўГ­Г®ГҐ Г¬ГҐГ­Гѕ
-Dim passing As Integer
 
-passing = MsgBox("ГЌГ Г¦Г¬ГЁГІГҐ OK Г¤Г«Гї ГЇГ°Г®Г¤Г®Г«Г¦ГҐГ­ГЁГї Г®ГґГ®Г°Г¬Г«ГҐГ­ГЁГї Г±Г¬ГҐГІГ» ГЁГ«ГЁ Cancel Г¤Г«Гї Г§Г ГўГҐГ°ГёГҐГ­ГЁГї", vbOKCancel)
-
-If passing = 1 Then
-    Call userFormEstimate
-Else
-    Exit Sub
-End If
-
-End Sub
 
 Sub coefBudgetFinancing()
 
-coefficientName = "ГЄГ®ГЅГґГґГЁГ¶ГЁГҐГ­ГІГ®Г¬ ГЎГѕГ¤Г¦ГҐГІГ­Г®ГЈГ® ГґГЁГ­Г Г­Г±ГЁГ°Г®ГўГ Г­ГЁГї"
+coefficientName = "коэффициентом бюджетного финансирования"
 Call completeAddCoef
 
 End Sub
 
 Sub addCoef(numberRow)
-'Г¤Г®ГЎГ ГўГ«ГҐГ­ГЁГҐ ГґГ®Г°Г¬ГіГ«Г» Г¤Г«Гї ГЄГ®ГЅГґГґГЁГ¶ГЁГҐГ­ГІГ 
+'добавление формулы для коэффициента
 Rows((numberRow + 1) & ":" & (numberRow + 2)).Insert
 
-Cells(numberRow + 1, 1).Value = "Г€ГІГ®ГЈГ® Г± " & coefficientName & " K =" & coefficient
+Cells(numberRow + 1, 1).Value = "Итого с " & coefficientName & " K =" & coefficient
 Cells(numberRow + 1, numberCol).formula = "=round(" & letterCol & numberRow & "*" & coefficient & ",2)"
 Call NDSIncluding(numberRow + 2)
 
 End Sub
 
 Sub completeAddCoef()
-'Г¤Г®ГЎГ ГўГ«ГҐГ­ГЁГҐ ГЄГ®ГЅГґГґГЁГ¶ГЁГҐГ­ГІГ 
+'добавление коэффициента
 Dim i As Variant
-
+Dim j As Variant
 
 If typeEstimate = "" Then
     Call determinationEstimateType
 End If
 
-coefficient = InputBox("ГЏГҐГ°ГҐГ©Г¤ГЁГІГҐ Г­Г  Г Г­ГЈГ«ГЁГ©Г±ГЄГЁГ© ГЁ ГўГўГҐГ¤ГЁГІГҐ Г§Г­Г Г·ГҐГ­ГЁГҐ ГЄГ®ГЅГґГґГЁГ¶ГЁГҐГ­ГІГ ")
+coefficient = InputBox("Перейдите на английский и введите значение коэффициента")
 
-Call activateSheet("*Г‘Г¬ГҐГІГ *")
+Call activateSheet("*Смета*")
 If lastRow = 0 Then lastRow = seachLastCell() + 1
 
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
-seachStr = "?????* ГЌГ„Г‘*"
+seachStr = "?????* НДС*"
 Set rowForCoefficient = Seach(seachStr, seachRange)
 Call quickSort(rowForCoefficient, 1, rowForCoefficient.Count)
 
@@ -441,7 +433,35 @@ For i = 0 To rowForCoefficient.Count - 1
     
 Next
 
-Call activateSheet("ГЏГЌГ–")
+Call activateSheet("РНЦ")
+
+Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
+seachStr = "Стоимость с учетом НДС*"
+
+Set rowForCoefficient = Seach(seachStr, seachRange)
+Call quickSort(rowForCoefficient, 1, rowForCoefficient.Count)
+
+Rows((rowForCoefficient(1) + 1) & ":" & (rowForCoefficient(1) + 2)).Insert
+
+For i = 2 To 8
+    numberCol = i
+    letterCol = Split(Cells(rowForCoefficient(1), i).Address, "$")(1)
+    Cells(rowForCoefficient(1) + 1, 1).Value = "Итого с " & coefficientName & " K =" & coefficient
+    Cells(rowForCoefficient(1) + 1, numberCol).formula = "=round(" & letterCol & rowForCoefficient(1) & "*" & coefficient & ",2)"
+    Call NDSIncluding(rowForCoefficient(1) + 2)
+Next
+
+With Range("A" & rowForCoefficient(1) + 1 & ":H" & rowForCoefficient(1) + 2)
+    .Borders.LineStyle = xlContinuous
+    .Font.Bold = True
+End With
+With Range("A" & rowForCoefficient(1) + 1)
+            .WrapText = True
+            .HorizontalAlignment = xlLeft
+End With
 
 End Sub
 
+Sub usn()
+
+End Sub

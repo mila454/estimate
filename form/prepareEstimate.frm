@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} prepareEstimate 
-   Caption         =   "ГЋГґГ®Г°Г¬Г«ГҐГ­ГЁГҐ Г±Г¬ГҐГІГ»"
+   Caption         =   "Оформление сметы"
    ClientHeight    =   6750
    ClientLeft      =   45
    ClientTop       =   390
@@ -8,7 +8,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} prepareEstimate
    OleObjectBlob   =   "prepareEstimate.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
-Attribute VB_Name = "form/prepareEstimate"
+Attribute VB_Name = "prepareEstimate"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -46,23 +46,24 @@ Dim ctr As Control
 Dim i As Variant
 i = 0
 prepareEstimate.Hide
+'Заполнение массивов именами выбранных пунктов
 
 For Each ctr In prepareEstimate.simpleFrame.Controls
-    If ctr.Value = True Then
+    If ctr Then
         simpleFrameList(i) = ctr.Name
     End If
     i = i + 1
 Next
 i = 0
 For Each ctr In prepareEstimate.complexFrame.Controls
-    If ctr.Value = True Then
+    If ctr Then
         complexFrameList(i) = ctr.Name
     End If
     i = i + 1
 Next
 i = 0
 For Each ctr In prepareEstimate.executionFrame.Controls
-    If ctr.Value = True Then
+    If ctr Then
         executionFrameList(i) = ctr.Name
     End If
     i = i + 1
@@ -76,13 +77,22 @@ For Each ctr In prepareEstimate.typesOfWorksFrame.Controls
     End If
     i = i + 1
 continue: Next
-'If NDSOptionButton.Value = True Then
-'    Call userFormEstimate.nds
-'End If
 
-'If financeCheckBox.Value = True Then
-'    Call coefBudgetFinancing
-'End If
+For i = LBound(simpleFrameList) To UBound(simpleFrameList)
+    Debug.Print simpleFrameList(i)
+Next
+
+
+
+For i = LBound(simpleFrameList) To UBound(simpleFrameList)
+    If simpleFrameList(i) = "NDSOptionButton" Then
+        Call userFormEstimate.nds
+    ElseIf simpleFrameList(i) = "USNOptionButton" Then
+        Call userFormEstimate.usn
+    ElseIf simpleFrameList(i) = "financeCheckBox" Then
+        Call userFormEstimate.coefBudgetFinancing
+    End If
+Next
 
 End Sub
 
