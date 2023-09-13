@@ -31,15 +31,9 @@ prepareEstimate.Show
 End Sub
 
 Sub nds()
-Dim i As Variant
 Dim item As Variant
 
-Call activateSheet("Смета *")
-lastRow = seachLastCell() + 1
-Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
-Call determinationEstimateType
-Call header
-Call clearTail
+
 
 If numberEstimates > 1 Then
     For i = 1 To totalEstimate.Count - 1
@@ -282,7 +276,6 @@ With Range("B6:E6, B7:D7, B8:D8")
     .HorizontalAlignment = xlLeft
 End With
 Call heightAdjustment(Range("B6:D6"))
-Call countEstimate
 
 For i = 1 To numberEstimates
     Cells(nameLocation(i - 1) + 3, 1).Value = Cells(nameLocation(i - 1), 1).Value & i + 1
@@ -414,10 +407,6 @@ Sub completeAddCoef()
 Dim i As Variant
 Dim j As Variant
 
-If typeEstimate = "" Then
-    Call determinationEstimateType
-End If
-
 coefficient = InputBox("Перейдите на английский и введите значение коэффициента")
 
 Call activateSheet("*Смета*")
@@ -458,10 +447,38 @@ End With
 With Range("A" & rowForCoefficient(1) + 1)
             .WrapText = True
             .HorizontalAlignment = xlLeft
+            .EntireRow.AutoFit
 End With
 
 End Sub
 
 Sub usn()
+
+End Sub
+
+Sub startEstimate()
+
+Dim i As Variant
+
+Call activateSheet("Смета *")
+lastRow = seachLastCell() + 1
+Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
+Call determinationEstimateType
+Call countEstimate
+
+For i = LBound(simpleFrameList) To UBound(simpleFrameList)
+    If simpleFrameList(i) = "NDSOptionButton" Then
+        Call header
+        Call clearTail
+        Call nds
+    ElseIf simpleFrameList(i) = "USNOptionButton" Then
+        Call header
+        Call clearTail
+        Call usn
+    ElseIf simpleFrameList(i) = "financeCheckBox" Then
+        Call coefBudgetFinancing
+    End If
+Next
+
 
 End Sub

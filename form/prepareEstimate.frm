@@ -82,17 +82,8 @@ For i = LBound(simpleFrameList) To UBound(simpleFrameList)
     Debug.Print simpleFrameList(i)
 Next
 
+Call startEstimate
 
-
-For i = LBound(simpleFrameList) To UBound(simpleFrameList)
-    If simpleFrameList(i) = "NDSOptionButton" Then
-        Call userFormEstimate.nds
-    ElseIf simpleFrameList(i) = "USNOptionButton" Then
-        Call userFormEstimate.usn
-    ElseIf simpleFrameList(i) = "financeCheckBox" Then
-        Call userFormEstimate.coefBudgetFinancing
-    End If
-Next
 
 End Sub
 
