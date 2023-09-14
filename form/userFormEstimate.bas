@@ -31,8 +31,8 @@ prepareEstimate.Show
 End Sub
 
 Sub nds()
+Dim i As Variant
 Dim item As Variant
-
 
 
 If numberEstimates > 1 Then
@@ -247,7 +247,7 @@ Next
 End Sub
 
 Sub header()
-'Формирование шапки, наименования сметы
+'Формирование шапки
 Dim item As Variant
 Dim i As Variant
 
@@ -277,22 +277,6 @@ With Range("B6:E6, B7:D7, B8:D8")
 End With
 Call heightAdjustment(Range("B6:D6"))
 
-For i = 1 To numberEstimates
-    Cells(nameLocation(i - 1) + 3, 1).Value = Cells(nameLocation(i - 1), 1).Value & i + 1
-    Cells(nameLocation(i - 1) + 5, 1).Value = smetaName(i - 1)
-    Range(Cells(nameLocation(i - 1), 1), Cells(nameLocation(i - 1) + 1, numberCol + 1)).Clear
-Next
-
-Call heightAdjustment(Range("A10:K10"))
-Call heightAdjustment(Range("A15:K15"))
-
-
-With Range(Cells(3, 1), Cells(7, 2))
-    .Font.Name = "Times New Roman"
-    .Font.Size = 13
-End With
-
-
 End Sub
 
 Sub heightAdjustment(mergedRange)
@@ -316,7 +300,7 @@ mergedRange.RowHeight = mergedRange.RowHeight * WorksheetFunction.RoundUp(myLen 
 
 End Sub
 
-Sub countEstimate()
+Sub countEstimateAndSeachTitle()
 'определение количества смет и их наменований
 Dim i As Variant
 Dim item As Variant
@@ -332,13 +316,19 @@ Next
 tempLocation = Trim(tempLocation)
 nameLocation = Split(tempLocation, " ")
 
+Sheets("SourceObSm").Activate
+Cells(1, 10).Clear
+
 Sheets("Source").Activate
+Cells(1, 10).Clear
+lastRow = seachLastCell() + 1
+
 For i = 1 To lastRow
     If Cells(i, 6).HasFormula = False And Cells(i, 6).Value = "Новая локальная смета" Then
         tempName = tempName & Cells(i, 7).Value & ";"
     End If
 Next
-tempName = Trim(tempName)
+tempName = Left(tempName, Len(tempName) - 1)
 smetaName = Split(tempName, ";")
 
 For Each item In smetaName
@@ -464,15 +454,19 @@ Call activateSheet("Смета *")
 lastRow = seachLastCell() + 1
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
 Call determinationEstimateType
-Call countEstimate
+Call countEstimateAndSeachTitle
 
 For i = LBound(simpleFrameList) To UBound(simpleFrameList)
     If simpleFrameList(i) = "NDSOptionButton" Then
         Call header
+        Call countEstimateAndSeachTitle
+        Call insertEstimateTitle
         Call clearTail
         Call nds
     ElseIf simpleFrameList(i) = "USNOptionButton" Then
         Call header
+        Call countEstimateAndSeachTitle
+        Call insertEstimateTitle
         Call clearTail
         Call usn
     ElseIf simpleFrameList(i) = "financeCheckBox" Then
@@ -482,3 +476,28 @@ Next
 
 
 End Sub
+
+Sub insertEstimateTitle()
+'вставка заголовка сметы
+
+Dim i As Variant
+
+For i = 1 To numberEstimates
+    Cells(nameLocation(i - 1) + 3, 1).Value = Cells(nameLocation(i - 1), 1).Value & i + 1
+    Cells(nameLocation(i - 1) + 5, 1).Value = smetaName(i - 1)
+    Range(Cells(nameLocation(i - 1), 1), Cells(nameLocation(i - 1) + 1, numberCol + 1)).Clear
+Next
+
+Call heightAdjustment(Range("A10:K10"))
+Call heightAdjustment(Range("A15:K15"))
+
+
+With Range(Cells(3, 1), Cells(7, 2))
+    .Font.Name = "Times New Roman"
+    .Font.Size = 13
+End With
+
+End Sub
+
+
+
