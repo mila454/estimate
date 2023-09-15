@@ -159,6 +159,7 @@ End Sub
 Sub clearTail()
 'очистка, удаление объединения между Итого по локальной смете... и Составил-Проверил
 Dim i As Variant
+Dim tempOfset As Integer
 
 Call activateSheet("Смета *")
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 9))
@@ -179,16 +180,16 @@ For i = 1 To totalEstimate.Count
         If numberEstimates > 1 Then
             If i < numberEstimates Then
                 Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i)).EntireRow.Hidden = False
-                Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i)).EntireRow.Delete
-                totalEstimate.Add totalEstimate(i + 1) - ((nameLocation(i)) - (totalEstimate(i))), , , i
-                totalEstimate.Add totalEstimate(i + 3) - ((nameLocation(i)) - (totalEstimate(i))), , , i + 1
+                Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i) - 1).EntireRow.Delete
+                tempOfset = (nameLocation(i) - 1) - (totalEstimate(i))
+                totalEstimate.Add totalEstimate(i + 1) - (tempOfset), , , i
+                totalEstimate.Add totalEstimate(i + 3) - (tempOfset), , , i + 1
                 totalEstimate.Remove (totalEstimate.Count)
-               
             Else
                 Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1)).EntireRow.Hidden = False
                 Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1) - 1).EntireRow.Delete
                 totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i
-                totalEstimate.Add totalEstimate(i + 3) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i + 1
+                totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i + 1
                 totalEstimate.Remove (totalEstimate.Count)
                 totalEstimate.Remove (totalEstimate.Count)
                 totalEstimate.Remove (totalEstimate.Count)
@@ -276,6 +277,10 @@ With Range("B6:E6, B7:D7, B8:D8")
     .HorizontalAlignment = xlLeft
 End With
 Call heightAdjustment(Range("B6:D6"))
+With Range(Cells(3, 1), Cells(7, 2))
+    .Font.Name = "Times New Roman"
+    .Font.Size = 13
+End With
 
 End Sub
 
@@ -454,7 +459,6 @@ Call activateSheet("Смета *")
 lastRow = seachLastCell() + 1
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
 Call determinationEstimateType
-Call countEstimateAndSeachTitle
 
 For i = LBound(simpleFrameList) To UBound(simpleFrameList)
     If simpleFrameList(i) = "NDSOptionButton" Then
@@ -479,23 +483,19 @@ End Sub
 
 Sub insertEstimateTitle()
 'вставка заголовка сметы
-
 Dim i As Variant
 
+Call activateSheet("Смета *")
+
 For i = 1 To numberEstimates
-    Cells(nameLocation(i - 1) + 3, 1).Value = Cells(nameLocation(i - 1), 1).Value & i + 1
+    Cells(nameLocation(i - 1), 1).Value = Cells(nameLocation(i - 1), 1).Value & i
     Cells(nameLocation(i - 1) + 5, 1).Value = smetaName(i - 1)
-    Range(Cells(nameLocation(i - 1), 1), Cells(nameLocation(i - 1) + 1, numberCol + 1)).Clear
+    Cells(nameLocation(i - 1) + 3, 1).EntireRow.Clear
+    Call heightAdjustment(Range("A" & nameLocation(i - 1) + 5 & ":K" & nameLocation(i - 1) + 5))
 Next
 
-Call heightAdjustment(Range("A10:K10"))
-Call heightAdjustment(Range("A15:K15"))
 
 
-With Range(Cells(3, 1), Cells(7, 2))
-    .Font.Name = "Times New Roman"
-    .Font.Size = 13
-End With
 
 End Sub
 
