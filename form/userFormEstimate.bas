@@ -157,9 +157,10 @@ Do While low <= high
 End Sub
 
 Sub clearTail()
-'очистка, удаление объединения между Итого по локальной смете... и Составил-Проверил
+'удаление строк в конце смет
 Dim i As Variant
-Dim tempOfset As Integer
+Dim tempOffset As Integer
+Dim tempRow As Integer
 
 Call activateSheet("Смета *")
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 9))
@@ -167,40 +168,60 @@ seachStr = "Итого по*смете*"
 Set totalEstimate = Seach(seachStr, seachRange)
 Call quickSort(totalEstimate, 1, totalEstimate.Count)
 
+'For i = 1 To totalEstimate.Count
+'    If i = totalEstimate.Count Then
+'        If numberEstimates = 1 Then
+'            Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Delete
+            
+ '       Else
+ '           Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Hidden = False
+ '           Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Delete
+ '       End If
+ '   Else
+ '       If numberEstimates > 1 Then
+ '           If i < numberEstimates Then
+ '               Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i)).EntireRow.Hidden = False
+ '               Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i) - 1).EntireRow.Delete
+ '               tempOfset = (nameLocation(i) - 1) - (totalEstimate(i))
+ '               totalEstimate.Add totalEstimate(i + 1) - (tempOfset), , , i
+ '               totalEstimate.Add totalEstimate(i + 3) - (tempOfset), , , i + 1
+ '               totalEstimate.Remove (totalEstimate.Count)
+ '           Else
+ '               Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1)).EntireRow.Hidden = False
+ '               Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1) - 1).EntireRow.Delete
+ '               totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i
+  '              totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i + 1
+ '               totalEstimate.Remove (totalEstimate.Count)
+ '               totalEstimate.Remove (totalEstimate.Count)
+ '               totalEstimate.Remove (totalEstimate.Count)
+ '           End If
+ '       Else
+ '           Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1)).EntireRow.Hidden = False
+ '           Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1) - 1).EntireRow.Delete
+ '           totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i
+ '           totalEstimate.Remove (totalEstimate.Count)
+ '       End If
+ '   End If
+'Next
+
+Dim rangeForClearing As Range
+
 For i = 1 To totalEstimate.Count
     If i = totalEstimate.Count Then
-        If numberEstimates = 1 Then
-            Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Delete
-            
-        Else
-            Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Hidden = False
-            Range("A" & totalEstimate(i) + 1 & ":A" & lastRow).EntireRow.Delete
-        End If
+        Set rangeForClearing = Range("A" & totalEstimate(i) + 1 & ":" & letterCol & lastRow)
     Else
-        If numberEstimates > 1 Then
-            If i < numberEstimates Then
-                Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i)).EntireRow.Hidden = False
-                Range("A" & totalEstimate(i) + 1 & ":A" & nameLocation(i) - 1).EntireRow.Delete
-                tempOfset = (nameLocation(i) - 1) - (totalEstimate(i))
-                totalEstimate.Add totalEstimate(i + 1) - (tempOfset), , , i
-                totalEstimate.Add totalEstimate(i + 3) - (tempOfset), , , i + 1
-                totalEstimate.Remove (totalEstimate.Count)
-            Else
-                Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1)).EntireRow.Hidden = False
-                Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1) - 1).EntireRow.Delete
-                totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i
-                totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i + 1
-                totalEstimate.Remove (totalEstimate.Count)
-                totalEstimate.Remove (totalEstimate.Count)
-                totalEstimate.Remove (totalEstimate.Count)
-            End If
+        If i = numberEstimates Then
+            tempRow = totalEstimate(i + 1) - tempOffset - 1
         Else
-            Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1)).EntireRow.Hidden = False
-            Range("A" & totalEstimate(i) + 1 & ":A" & totalEstimate(i + 1) - 1).EntireRow.Delete
-            totalEstimate.Add totalEstimate(i + 1) - ((totalEstimate(i + 1) - 1) - (totalEstimate(i))), , , i
-            totalEstimate.Remove (totalEstimate.Count)
+            tempRow = nameLocation(i) - 1
         End If
+        Set rangeForClearing = Range("A" & totalEstimate(i) + 1 & ":" & letterCol & tempRow)
+        tempOffset = tempOffset + (tempRow - (totalEstimate(i)))
+        totalEstimate.Add totalEstimate(i + 1) - (tempOffset), , , i
+        totalEstimate.Remove (i + 2)
+            
     End If
+    rangeForClearing.EntireRow.Delete
 Next
 
 End Sub
