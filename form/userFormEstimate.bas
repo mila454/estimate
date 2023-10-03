@@ -441,8 +441,10 @@ Sub startEstimate()
 Dim i As Variant
 
 Call activateSheet("Смета *")
+
 lastRow = seachLastCell() + 1
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
+
 Call determinationEstimateType
 
 For i = LBound(simpleFrameList) To UBound(simpleFrameList)
@@ -450,6 +452,8 @@ For i = LBound(simpleFrameList) To UBound(simpleFrameList)
         Call header
         Call countEstimateAndSeachTitle
         Call insertEstimateTitle
+        lastRow = seachLastCell() + 1
+        Set seachRange = Range(Cells(1, 1), Cells(lastRow, 11))
         Call clearTail
         Call nds
     ElseIf simpleFrameList(i) = "USNOptionButton" Then
