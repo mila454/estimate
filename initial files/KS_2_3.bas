@@ -31,7 +31,7 @@ Dim totalByAct As New Collection
 
 Set currWB = ActiveWorkbook
 Set smetaName = New Collection
-Sheets("АктКС-2поТСН-2001(с доп.67").Activate
+Sheets("Акт КС-2 СН-2012 по гл. 1-").Activate
 
 signer = "Е.И. Новощинская"
 OKPO = "17785844"
@@ -45,11 +45,11 @@ lastRow = ContractEstimate.seachLastCell()
 
 Set seachRange = Range(Cells(1, 1), Cells(lastRow, 12))
 seachStr = "Итого по разделу: *"
-Set totalBySection = Seach(seachStr, seachRange)
+Set totalBySection = Estimate.Seach(seachStr, seachRange)
 Call quickSort.quickSort(totalBySection, 1, totalBySection.Count)
 
 seachStr = "*Локальная смета:*"
-Set smetaNameRow = Seach(seachStr, seachRange)
+Set smetaNameRow = Estimate.Seach(seachStr, seachRange)
 Call quickSort.quickSort(smetaNameRow, 1, smetaNameRow.Count)
 
 For Each currRow In smetaNameRow
@@ -61,7 +61,7 @@ For i = 1 To smetaNameRow.Count
 Next
 
 seachStr = "Стройка*"
-Set construction = Seach(seachStr, seachRange)
+Set construction = Estimate.Seach(seachStr, seachRange)
 Cells(construction(1), 3).Value = smetaName(1)
 Cells(construction(1) + 2, 3).Value = smetaName(1)
 Call heightAdjustment.heightAdjustment(Range("C" & construction(1) & ":H" & construction(1)))
@@ -69,20 +69,20 @@ Call heightAdjustment.heightAdjustment(Range("C" & construction(1) + 2 & ":H" & 
 
 
 seachStr = "Заказчик*"
-Set customer = Seach(seachStr, seachRange)
+Set customer = Estimate.Seach(seachStr, seachRange)
 Cells(customer(1), 3).Value = "ГКУ г.Москвы " & Chr(34) & "Дирекция Мосприроды" & Chr(34) & ", 117420, г.Москва, ул.Профсоюзная, д.41, тел. 8(495) 531-20-08"
 Sheets("Source").Cells(15, 37).Value = OKPO
 Call heightAdjustment.heightAdjustment(Range("C" & customer(1) & ":H" & customer(1)))
 
 For Each currRow In totalBySection
-    If Cells(currRow, 11).Value = 0 Then
+    If Cells(currRow, 10).Value = 0 Then
         Rows(currRow - 3 & ":" & currRow).Interior.color = 65535
     End If
 Next
 currRow = 0
 
 seachStr = "Итого по*смете*"
-Set totalEstimate = Seach(seachStr, seachRange)
+Set totalEstimate = Estimate.Seach(seachStr, seachRange)
 Call quickSort.quickSort(totalEstimate, 1, totalEstimate.Count)
 
 If totalEstimate.Count > 1 Then
@@ -111,23 +111,23 @@ For Each currRow In seachRange
 Next
 
 seachStr = "Принял  *"
-Set accept = Seach(seachStr, seachRange)
+Set accept = Estimate.Seach(seachStr, seachRange)
 Cells(accept(1), 4).Value = "Заместитель директора ГКУ г.Москвы " & Chr(34) & "Дирекция Мосприроды" & Chr(34)
 Cells(accept(1), 12).Value = signer
 
 
 seachStr = "Сдал*"
-Set signiture = Seach(seachStr, seachRange)
+Set signiture = Estimate.Seach(seachStr, seachRange)
 
 
 
 seachStr = "Итого по акту:*"
-Set totalByAct = Seach(seachStr, seachRange)
+Set totalByAct = Estimate.Seach(seachStr, seachRange)
 
 
 
 Cells(totalByAct(1), 1).Value = "Итого по акту: " & smetaName(1)
-Call cancelMerge("K", totalByAct(1), "L", totalByAct(1), 0)
+Call Estimate.cancelMerge("K", totalByAct(1), "L", totalByAct(1), 0)
 Cells(totalByAct(1), 12).formula = "=SUM(P36:P" & totalByAct(1) & ")"
 
 
@@ -138,21 +138,21 @@ Rows(totalByAct(1) + 1).Insert
 Rows(totalByAct(1) + 1).ClearFormats
 Rows(totalByAct(1) + 1).Insert
 Rows(totalByAct(1) + 1).ClearFormats
-Call Estimate.ndsTotal(totalByAct(1), "L", 12)
+Call Estimate.ndsTotal(totalByAct(1), "K", 11)
 temp = totalByAct(1)
 Set totalByAct = New Collection
 totalByAct.Add temp + 2
 
 kFin = simpleInput("коэффициент бюджетного финансирования")
 If kFin <> "" Then
-    Call ContractEstimate.TotalWithK(kFin, "коэффициента бюджетного финансирования", totalByAct(1), totalByAct(1), "L", 1, 12)
+    Call ContractEstimate.TotalWithK(kFin, "коэффициента бюджетного финансирования", totalByAct(1), totalByAct(1), "K", 1, 11)
     totalByAct.Add totalByAct(1) + 1
 End If
 
 
 kDecline = simpleInput("коэффициент снижения по итогам торгов")
 If kDecline <> "" Then
-    Call ContractEstimate.TotalWithK(kDecline, kName, totalByAct(totalByAct.Count) + 1, totalByAct(totalByAct.Count), "L", 1, 12)
+    Call ContractEstimate.TotalWithK(kDecline, kName, totalByAct(totalByAct.Count) + 1, totalByAct(totalByAct.Count), "K", 1, 11)
     totalByAct.Add totalByAct(totalByAct.Count) + 2
 End If
 
@@ -161,21 +161,21 @@ End If
 
 Sheets("Макет форма-3").Activate
 Cells(12, 3).Value = smetaName(1)
-Cells(8, 3) = Sheets("АктКС-2поТСН-2001(с доп.67").Cells(11, 3)
+Cells(8, 3) = Sheets("Акт КС-2 СН-2012 по гл. 1-").Cells(11, 3)
 Call heightAdjustment.heightAdjustment(Range("C8:H8"))
 Call heightAdjustment.heightAdjustment(Range("C12:H12"))
 Cells(8, 11) = OKPO
-Cells(14, 11).formula = "='АктКС-2поТСН-2001(с доп.67'!J20"
-Cells(15, 11).formula = "='АктКС-2поТСН-2001(с доп.67'!J21"
-Cells(21, 3).formula = "='АктКС-2поТСН-2001(с доп.67'!G27"
-Cells(21, 9).formula = "='АктКС-2поТСН-2001(с доп.67'!I27"
-Cells(21, 11).formula = "='АктКС-2поТСН-2001(с доп.67'!J27"
+Cells(14, 11).formula = "='Акт КС-2 СН-2012 по гл. 1-'!J20"
+Cells(15, 11).formula = "='Акт КС-2 СН-2012 по гл. 1-'!J21"
+Cells(21, 3).formula = "='Акт КС-2 СН-2012 по гл. 1-'!G27"
+Cells(21, 9).formula = "='Акт КС-2 СН-2012 по гл. 1-'!I27"
+Cells(21, 11).formula = "='Акт КС-2 СН-2012 по гл. 1-'!J27"
 Cells(35, 2).Value = "В том числе:" & smetaName(1)
 Range("B35:L35").UnMerge
 Range("B35:E35").Merge
 Call heightAdjustment.heightAdjustment(Range("B35:E35"))
 Range("K35:L35").Merge
-Cells(38, 11).formula = "='АктКС-2поТСН-2001(с доп.67'!L" & totalByAct(totalByAct.Count)
+Cells(38, 11).formula = "='Акт КС-2 СН-2012 по гл. 1-'!L" & totalByAct(totalByAct.Count)
 Cells(37, 11).formula = "=round(K38*20/120,2)"
 Cells(36, 11).formula = "=K38-K37"
 
