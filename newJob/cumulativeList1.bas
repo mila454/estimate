@@ -22,26 +22,26 @@ Dim item As Variant
 
 
 Sub filTotalForPosition()
-'заполнение итого по позиции в текущих ценах'
+'Г§Г ГЇГ®Г«Г­ГҐГ­ГЁГҐ ГЁГІГ®ГЈГ® ГЇГ® ГЇГ®Г§ГЁГ¶ГЁГЁ Гў ГІГҐГЄГіГ№ГЁГµ Г¶ГҐГ­Г Гµ'
 lastCell = seachLastCell()
 
 Set seachRange = Range("A1:L" & lastCell)
-'seachString = "Раздел: *"'
+'seachString = "ГђГ Г§Г¤ГҐГ«: *"'
 'Set beginningOfSection = Estimate.Seach(seachString, seachRange)'
-seachString = "Итого по разделу *"
+seachString = "Г€ГІГ®ГЈГ® ГЇГ® Г°Г Г§Г¤ГҐГ«Гі *"
 Set totalForSection = Seach(seachString, seachRange, "row")
-seachString = "Всего по позиции"
+seachString = "Г‚Г±ГҐГЈГ® ГЇГ® ГЇГ®Г§ГЁГ¶ГЁГЁ"
 Set totalByPosition = Seach(seachString, seachRange, "row")
-seachString = "ВСЕГО по смете*"
+seachString = "Г‚Г‘Г…ГѓГЋ ГЇГ® Г±Г¬ГҐГІГҐ*"
 Set totalByEstimate = Seach(seachString, seachRange, "row")
 'Call quickSort.quickSort(beginningOfSection, 1, beginningOfSection.Count)'
 Call quickSort.quickSort(totalForSection, 1, totalForSection.Count)
 Call quickSort.quickSort(totalByPosition, 1, totalByPosition.Count)
 Call quickSort.quickSort(totalByEstimate, 1, totalByEstimate.Count)
 
-Set coefMeh = Seach("эксплуатация машин и механизмов", seachRange, 3)
-Set coefMat = Seach("материальные ресурсы", seachRange, 3)
-Set coefTransp = Seach("перевозка", seachRange, 3)
+Set coefMeh = Seach("ГЅГЄГ±ГЇГ«ГіГ ГІГ Г¶ГЁГї Г¬Г ГёГЁГ­ ГЁ Г¬ГҐГµГ Г­ГЁГ§Г¬Г®Гў", seachRange, 3)
+Set coefMat = Seach("Г¬Г ГІГҐГ°ГЁГ Г«ГјГ­Г»ГҐ Г°ГҐГ±ГіГ°Г±Г»", seachRange, 3)
+Set coefTransp = Seach("ГЇГҐГ°ГҐГўГ®Г§ГЄГ ", seachRange, 3)
 
 
 Call removeItemsFromCollection(coefMeh)
@@ -63,7 +63,7 @@ Next
 
 End Sub
 Function seachLastCell()
-' поиск последней непустой ячейки в столбцах с 1-го по 12-й
+' ГЇГ®ГЁГ±ГЄ ГЇГ®Г±Г«ГҐГ¤Г­ГҐГ© Г­ГҐГЇГіГ±ГІГ®Г© ГїГ·ГҐГ©ГЄГЁ Гў Г±ГІГ®Г«ГЎГ¶Г Гµ Г± 1-ГЈГ® ГЇГ® 12-Г©
     Dim c(12) As Integer
     For i = 1 To 12
         c(i) = Cells(Rows.Count, i).End(xlUp).Row
@@ -71,7 +71,7 @@ Function seachLastCell()
     seachLastCell = WorksheetFunction.Max(c)
 End Function
 Function Seach(seachStr, seachRange, token) As collection
-'поиск по строке и сохранение номера ряда в коллекцию
+'ГЇГ®ГЁГ±ГЄ ГЇГ® Г±ГІГ°Г®ГЄГҐ ГЁ Г±Г®ГµГ°Г Г­ГҐГ­ГЁГҐ Г­Г®Г¬ГҐГ°Г  Г°ГїГ¤Г  Гў ГЄГ®Г«Г«ГҐГЄГ¶ГЁГѕ
 Dim foundCell As Range
 Dim firstFoundCell As Range
 
@@ -81,7 +81,7 @@ Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues, MatchCase:=True)
 Set firstFoundCell = foundCell
 
 If firstFoundCell Is Nothing Then
-    MsgBox (seachStr & " не найдено")
+    MsgBox (seachStr & " Г­ГҐ Г­Г Г©Г¤ГҐГ­Г®")
     Exit Function
 End If
 
@@ -109,20 +109,20 @@ Next
 End Sub
 
 Sub filCurrentPrices(i)
-'заполнение сметная стоимость в текущем уровне цен, руб. ЭМ и М
+'Г§Г ГЇГ®Г«Г­ГҐГ­ГЁГҐ Г±Г¬ГҐГІГ­Г Гї Г±ГІГ®ГЁГ¬Г®Г±ГІГј Гў ГІГҐГЄГіГ№ГҐГ¬ ГіГ°Г®ГўГ­ГҐ Г¶ГҐГ­, Г°ГіГЎ. ГќГЊ ГЁ ГЊ
 
 Select Case Cells(i, 3).Value
-        Case "ОТ"
+        Case "ГЋГ’"
             rowOT = i
-        Case "ЭМ"
+        Case "ГќГЊ"
             rowEM = i
             Cells(rowEM, 11).Value2 = coefMeh(1)
             Cells(rowEM, 12).formula = "=round(K" & rowEM & "*J" & rowEM & ",2)"
-        Case "М"
+        Case "ГЊ"
             rowM = i
             Cells(rowM, 11).Value2 = coefMat(1)
             Cells(rowM, 12).formula = "=round(K" & rowM & "*J" & rowM & ",2)"
-        Case "ФОТ"
+        Case "Г”ГЋГ’"
             rowHP = i + 1
             rowCP = i + 2
 End Select
