@@ -11,67 +11,110 @@ Dim coefMeh As New collection
 Dim coefTransp As New collection
 Dim seachRange As Range
 Dim seachString As String
+Dim initialPosition As Integer
 Dim i As Integer
 Dim j As Integer
-Dim rowEM As Integer
-Dim rowOT As Integer
-Dim rowM As Integer
-Dim rowHP As Integer
-Dim rowCP As Integer
+Dim ans As Integer
 Dim item As Variant
+Dim smetaName As New collection
 
 
 Sub filTotalForPosition()
-'Г§Г ГЇГ®Г«Г­ГҐГ­ГЁГҐ ГЁГІГ®ГЈГ® ГЇГ® ГЇГ®Г§ГЁГ¶ГЁГЁ Гў ГІГҐГЄГіГ№ГЁГµ Г¶ГҐГ­Г Гµ'
+'заполнение итого по позиции в текущих ценах'
+
 lastCell = seachLastCell()
 
 Set seachRange = Range("A1:L" & lastCell)
-'seachString = "ГђГ Г§Г¤ГҐГ«: *"'
+'seachString = "Раздел: *"'
 'Set beginningOfSection = Estimate.Seach(seachString, seachRange)'
-seachString = "Г€ГІГ®ГЈГ® ГЇГ® Г°Г Г§Г¤ГҐГ«Гі *"
+seachString = "Итого по разделу *"
 Set totalForSection = Seach(seachString, seachRange, "row")
-seachString = "Г‚Г±ГҐГЈГ® ГЇГ® ГЇГ®Г§ГЁГ¶ГЁГЁ"
+seachString = "Всего по позиции"
 Set totalByPosition = Seach(seachString, seachRange, "row")
-seachString = "Г‚Г‘Г…ГѓГЋ ГЇГ® Г±Г¬ГҐГІГҐ*"
+seachString = "ВСЕГО по смете*"
 Set totalByEstimate = Seach(seachString, seachRange, "row")
 'Call quickSort.quickSort(beginningOfSection, 1, beginningOfSection.Count)'
+For Each item In Range("B1:B" & totalByPosition(1))
+    If item.Value Like "Обоснование" Then
+        initialPosition = item.row + 6
+    End If
+Next
+ totalByPosition.Add initialPosition
+
 Call quickSort.quickSort(totalForSection, 1, totalForSection.Count)
 Call quickSort.quickSort(totalByPosition, 1, totalByPosition.Count)
 Call quickSort.quickSort(totalByEstimate, 1, totalByEstimate.Count)
 
-Set coefMeh = Seach("ГЅГЄГ±ГЇГ«ГіГ ГІГ Г¶ГЁГї Г¬Г ГёГЁГ­ ГЁ Г¬ГҐГµГ Г­ГЁГ§Г¬Г®Гў", seachRange, 3)
-Set coefMat = Seach("Г¬Г ГІГҐГ°ГЁГ Г«ГјГ­Г»ГҐ Г°ГҐГ±ГіГ°Г±Г»", seachRange, 3)
-Set coefTransp = Seach("ГЇГҐГ°ГҐГўГ®Г§ГЄГ ", seachRange, 3)
-
+Set seachRange = Range("A1:L" & lastCell)
+Set coefMeh = Seach("эксплуатация машин и механизмов", seachRange, 3)
+Set coefMat = Seach("материальные ресурсы", seachRange, 3)
+Set coefTransp = Seach("перевозка", seachRange, 3)
 
 Call removeItemsFromCollection(coefMeh)
 Call removeItemsFromCollection(coefMat)
 Call removeItemsFromCollection(coefTransp)
 
-For j = 1 To totalByPosition.Count
-    If j = 1 Then
-        For i = 1 To totalByPosition(1)
-        Call filCurrentPrices(i)
-        Next
-    Else
-        For i = totalByPosition(j - 1) To totalByPosition(j)
-        Call filCurrentPrices(i)
-        Next
-    End If
-    Cells(totalByPosition(j), 12).formula = "= L" & rowOT & "+L" & rowEM & "+L" & rowM & "+L" & rowHP & "+L" & rowCP
+For j = 2 To totalByPosition.Count
+    For i = totalByPosition(j - 1) To totalByPosition(j)
+        If Cells(i, 3).Value Like "Перевозка *" Or Cells(i, 3).Value Like "Погрузка *" Then
+            Cells(i, 11).Value2 = coefMeh(1)
+            Cells(i, 12).formula = "=round(K" & i & "*J" & i & ",2)"
+        Else
+            Call filCurrentPrices(i)
+        End If
+    Next
+    Cells(totalByPosition(j), 12).formula = "= SUM(L" & totalByPosition(j - 1) + 1 & ":L" & totalByPosition(j) - 1 & ")"
+    Cells(totalByPosition(j), 13).formula = "= L" & totalByPosition(j)
 Next
+
+Cells(totalByEstimate(2), 13).formula = "= SUM(M" & totalByPosition(1) & ":M" & totalByEstimate(2) - 1 & ")"
+Columns("M:M").EntireColumn.AutoFit
+
+Cells(totalByEstimate(2), 13).Select
+
+ans = MsgBox("Проверьте итоговую сумму сметы", 1)
+If ans = 1 Then
+    Cells(totalByEstimate(2), 12).formula = "= M" & totalByEstimate(2)
+    Call cumulativeList
+Else
+    Exit Sub
+End If
+
+End Sub
+Sub cumulativeList()
+
+seachString = "(наименование конструктивного решения*"
+Set smetaName = Seach(seachString, seachRange, "row")
+
+'скрыть шапку и лишние столбцы
+Range("A1:A" & smetaName(1) - 2).EntireRow.Hidden = True
+Range("A" & smetaName(1) + 1 & ":A" & totalByPosition(1) - 7).EntireRow.Hidden = True
+Columns("E:F").Hidden = True
+Columns("H:K").Hidden = True
+Columns("M:M").Hidden = True
+
+For j = 2 To totalByPosition.Count
+    Range("A" & totalByPosition(j - 1) + 2 & ":A" & totalByPosition(j) - 1).EntireRow.Hidden = True
+Next
+
+Call insertCol("Акт № 1", 15, initialPosition - 6, lastCell)
+Cells(totalByEstimate(2), 15).formula = "= SUM(O" & totalByPosition(1) + 1 & ":O" & totalByEstimate(2) - 1 & ")"
+
+Call insertCol("Акт № 2", 17, initialPosition - 6, lastCell)
+Cells(totalByEstimate(2), 17).formula = "= SUM(Q" & totalByPosition(1) + 1 & ":Q" & totalByEstimate(2) - 1 & ")"
+
 
 End Sub
 Function seachLastCell()
-' ГЇГ®ГЁГ±ГЄ ГЇГ®Г±Г«ГҐГ¤Г­ГҐГ© Г­ГҐГЇГіГ±ГІГ®Г© ГїГ·ГҐГ©ГЄГЁ Гў Г±ГІГ®Г«ГЎГ¶Г Гµ Г± 1-ГЈГ® ГЇГ® 12-Г©
+' поиск последней непустой ячейки в столбцах с 1-го по 12-й
     Dim c(12) As Integer
     For i = 1 To 12
-        c(i) = Cells(Rows.Count, i).End(xlUp).Row
+        c(i) = Cells(Rows.Count, i).End(xlUp).row
     Next
     seachLastCell = WorksheetFunction.Max(c)
 End Function
 Function Seach(seachStr, seachRange, token) As collection
-'ГЇГ®ГЁГ±ГЄ ГЇГ® Г±ГІГ°Г®ГЄГҐ ГЁ Г±Г®ГµГ°Г Г­ГҐГ­ГЁГҐ Г­Г®Г¬ГҐГ°Г  Г°ГїГ¤Г  Гў ГЄГ®Г«Г«ГҐГЄГ¶ГЁГѕ
+'поиск по строке и сохранение номера ряда в коллекцию
 Dim foundCell As Range
 Dim firstFoundCell As Range
 
@@ -81,14 +124,14 @@ Set foundCell = seachRange.Find(seachStr, LookIn:=xlValues, MatchCase:=True)
 Set firstFoundCell = foundCell
 
 If firstFoundCell Is Nothing Then
-    MsgBox (seachStr & " Г­ГҐ Г­Г Г©Г¤ГҐГ­Г®")
+    MsgBox (seachStr & " не найдено")
     Exit Function
 End If
 
 Do
     Set foundCell = seachRange.FindNext(After:=foundCell)
     If token = "row" Then
-        Seach.Add foundCell.Row
+        Seach.Add foundCell.row
     Else
         Seach.Add foundCell.Offset(0, token).Value
     End If
@@ -109,24 +152,51 @@ Next
 End Sub
 
 Sub filCurrentPrices(i)
-'Г§Г ГЇГ®Г«Г­ГҐГ­ГЁГҐ Г±Г¬ГҐГІГ­Г Гї Г±ГІГ®ГЁГ¬Г®Г±ГІГј Гў ГІГҐГЄГіГ№ГҐГ¬ ГіГ°Г®ГўГ­ГҐ Г¶ГҐГ­, Г°ГіГЎ. ГќГЊ ГЁ ГЊ
+'заполнение сметная стоимость в текущем уровне цен, руб. ЭМ и М
 
-Select Case Cells(i, 3).Value
-        Case "ГЋГ’"
-            rowOT = i
-        Case "ГќГЊ"
-            rowEM = i
-            Cells(rowEM, 11).Value2 = coefMeh(1)
-            Cells(rowEM, 12).formula = "=round(K" & rowEM & "*J" & rowEM & ",2)"
-        Case "ГЊ"
-            rowM = i
-            Cells(rowM, 11).Value2 = coefMat(1)
-            Cells(rowM, 12).formula = "=round(K" & rowM & "*J" & rowM & ",2)"
-        Case "Г”ГЋГ’"
-            rowHP = i + 1
-            rowCP = i + 2
-End Select
+
+    Select Case Cells(i, 3).Value
+        Case "ЭМ"
+            Cells(i, 11).Value2 = coefMeh(1)
+                Cells(i, 12).formula = "=round(K" & i & "*J" & i & ",2)"
+        Case "М"
+                Cells(i, 11).Value2 = coefMat(1)
+                Cells(i, 12).formula = "=round(K" & i & "*J" & i & ",2)"
+        Case "в т.ч. ОТм", "ФОТ"
+                Cells(i, 12).ClearContents
+    End Select
+
 
 End Sub
 
+Sub insertCol(col_Name, col_ins, numberRow, lastCell, Optional fillCol = "255 255 255")
+'вставка двух колонок с соответствующими названиями, форматирование
+Dim range1 As Range
+Dim fill_color() As String
 
+Cells(, col_ins).EntireColumn.Insert
+Cells(, col_ins).EntireColumn.Insert
+Range((Cells(numberRow, (col_ins - 1))), Cells(numberRow, col_ins)).HorizontalAlignment = xlCenterAcrossSelection
+Cells(numberRow, col_ins - 1).Value = col_Name
+Cells(numberRow, col_ins - 1).WrapText = True
+Cells(numberRow + 1, col_ins - 1).Value = "Кол-во"
+Cells(numberRow + 1, col_ins - 1).HorizontalAlignment = xlCenter
+Cells(numberRow + 1, col_ins).Value = "Стоимость, руб."
+Cells(initialPosition - 7, col_ins - 1).VerticalAlignment = xlCenter
+Set range1 = Range((Cells(numberRow, (col_ins - 1))), Cells(lastCell, col_ins))
+If fillCol <> "" Then
+    Call fillColor(range1, fillCol)
+End If
+With range1
+    .Font.Size = 11
+    .Borders.LineStyle = xlContinuous
+    .ColumnWidth = 16
+End With
+
+End Sub
+
+Sub fillTail(coll)
+
+
+
+End Sub
