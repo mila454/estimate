@@ -18,10 +18,9 @@ Dim ans As Integer
 Dim ans2 As Integer
 Dim item As Variant
 Dim smetaName As New collection
-
-
-Sub filTotalForPosition()
-'заполнение итого по позиции в текущих ценах'
+'последняя версия'
+Sub initialDate()
+'Создание исходных данных '
 
 lastCell = seachLastCell()
 
@@ -55,6 +54,20 @@ Call removeItemsFromCollection(coefMeh)
 Call removeItemsFromCollection(coefMat)
 Call removeItemsFromCollection(coefTransp)
 
+ans = MsgBox("Есть необходимость заполнения графы Сметная стоимость в текущем уровне цен?", 4)
+If ans = 6 Then
+    Call filTotalForPosition
+Else
+    Call cumulativeList
+End If
+
+End Sub
+
+Sub filTotalForPosition()
+'заполнение итого по позиции в текущих ценах'
+
+
+
 For j = 2 To totalByPosition.Count
     For i = totalByPosition(j - 1) To totalByPosition(j)
         If Cells(i, 3).Value Like "Перевозка *" Or Cells(i, 3).Value Like "Погрузка *" Then
@@ -65,10 +78,15 @@ For j = 2 To totalByPosition.Count
         End If
     Next
     Cells(totalByPosition(j), 12).Formula = "= SUM(L" & totalByPosition(j - 1) + 1 & ":L" & totalByPosition(j) - 1 & ")"
+    If Cells(totalByPosition(j), 12).MergeCells = True Then
+        Call cancelMerge("K", totalByPosition(j), "L", totalByPosition(j), 1)
+    End If
+    
     Cells(totalByPosition(j), 13).Formula = "= L" & totalByPosition(j)
 Next
 
 Cells(totalByEstimate(2), 13).Formula = "= SUM(M" & totalByPosition(1) & ":M" & totalByEstimate(2) - 1 & ")"
+Cells(totalByEstimate(2), 13).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
 Columns("M:M").EntireColumn.AutoFit
 
 Cells(totalByEstimate(2), 13).Select
@@ -233,5 +251,19 @@ With Range(Cells(totalByEstimate(2), coll), Cells(lastCell, coll))
     .Font.Bold = True
     .NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
 End With
+
+End Sub
+
+Sub cancelMerge(col1, row1, col2, row2, transferStatus)
+' Отмена объединения ячеек и перенос данных
+Range(col1 & row1 & ":" & col2 & row2).UnMerge
+
+If transferStatus = 1 Then
+    Range(col1 & row1).Copy
+    Range(col2 & row2).PasteSpecial (xlPasteValuesAndNumberFormats)
+        Range(col1 & row1).Clear
+Else
+    Range(col1 & row1 & ":" & col2 & row2).Clear
+End If
 
 End Sub
