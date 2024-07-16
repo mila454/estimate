@@ -3,7 +3,7 @@ Attribute VB_Name = "cumulativeList1"
 Option Explicit
 Dim lastCell As Integer
 Dim totalByPosition As New collection
-'Dim beginningOfSection As New Collection'
+Dim beginningOfSection As New collection
 Dim totalForSection As New collection
 Dim totalByEstimate As New collection
 Dim coefMat As New collection
@@ -25,15 +25,15 @@ Sub initialDate()
 lastCell = seachLastCell()
 
 Set seachRange = Range("A1:L" & lastCell)
-'seachString = "Раздел: *"'
-'Set beginningOfSection = Estimate.Seach(seachString, seachRange)'
+seachString = "Раздел: *"
+Set beginningOfSection = Estimate.Seach(seachString, seachRange)
 seachString = "Итого по разделу *"
 Set totalForSection = Seach(seachString, seachRange, "row")
 seachString = "Всего по позиции"
 Set totalByPosition = Seach(seachString, seachRange, "row")
 seachString = "ВСЕГО по смете*"
 Set totalByEstimate = Seach(seachString, seachRange, "row")
-'Call quickSort.quickSort(beginningOfSection, 1, beginningOfSection.Count)'
+Call quickSort.quickSort(beginningOfSection, 1, beginningOfSection.Count)
 For Each item In Range("B1:B" & totalByPosition(1))
     If item.Value Like "Обоснование" Then
         initialPosition = item.row + 6
@@ -65,11 +65,18 @@ End Sub
 
 Sub filTotalForPosition()
 'заполнение итого по позиции в текущих ценах'
-
-
+Dim beginning As Integer
+Dim k As Integer
 
 For j = 2 To totalByPosition.Count
-    For i = totalByPosition(j - 1) To totalByPosition(j)
+    beginning = totalByPosition(j - 1)
+    For k = 1 To beginningOfSection.Count
+        If beginningOfSection(k) > totalByPosition(j - 1) And beginningOfSection(k) < totalByPosition(j) Then
+            beginning = beginningOfSection(k)
+            Exit For
+        End If
+    Next
+    For i = beginning To totalByPosition(j)
         If Cells(i, 3).Value Like "Перевозка *" Or Cells(i, 3).Value Like "Погрузка *" Then
             Cells(i, 11).Value2 = coefMeh(1)
             Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
@@ -77,7 +84,7 @@ For j = 2 To totalByPosition.Count
             Call filCurrentPrices(i)
         End If
     Next
-    Cells(totalByPosition(j), 12).Formula = "= SUM(L" & totalByPosition(j - 1) + 1 & ":L" & totalByPosition(j) - 1 & ")"
+    Cells(totalByPosition(j), 12).Formula = "= SUM(L" & beginning + 1 & ":L" & totalByPosition(j) - 1 & ")"
     If Cells(totalByPosition(j), 12).MergeCells = True Then
         Call cancelMerge("K", totalByPosition(j), "L", totalByPosition(j), 1)
     End If
