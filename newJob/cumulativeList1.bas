@@ -8,6 +8,7 @@ Dim totalForSection As New collection
 Dim totalByEstimate As New collection
 Dim coefMat As New collection
 Dim coefMeh As New collection
+Dim coefEquip As New collection
 Dim coefTransp As New collection
 Dim seachRange As Range
 Dim seachString As String
@@ -20,7 +21,7 @@ Dim item As Variant
 Dim smetaName As New collection
 
 'последняя версия'
-'отработка итоги по разделу
+
 
 Sub initialDate()
 'Создание исходных данных '
@@ -52,6 +53,8 @@ Set seachRange = Range("A1:L" & lastCell)
 Set coefMeh = Seach("эксплуатация машин и механизмов", seachRange, 3)
 Set coefMat = Seach("материальные ресурсы", seachRange, 3)
 Set coefTransp = Seach("перевозка", seachRange, 3)
+Set coefEquip = Seach("Всего оборудование", seachRange, 3)
+
 
 Call removeItemsFromCollection(coefMeh)
 Call removeItemsFromCollection(coefMat)
@@ -95,12 +98,13 @@ For j = 2 To totalByPosition.Count
     Cells(totalByPosition(j), 13).Formula = "= L" & totalByPosition(j)
 Next
 
+'итого по разделам
 For i = 1 To totalForSection.Count
     Cells(totalForSection(i), 12).Formula = "= SUM(M" & beginningOfSection(i) & ":M" & totalForSection(i) - 1 & ")"
     Cells(totalForSection(i), 12).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
 Next
 
-
+'итого по смете
 Cells(totalByEstimate(2), 13).Formula = "= SUM(M" & totalByPosition(1) & ":M" & totalByEstimate(2) - 1 & ")"
 Cells(totalByEstimate(2), 13).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
 Columns("M:M").EntireColumn.AutoFit
@@ -212,8 +216,23 @@ End Sub
 Sub filCurrentPrices(i)
 'заполнение сметная стоимость в текущем уровне цен, руб. ЭМ и М
 
+'заполнение материалов в составе позиции
 If Cells(i, 1).Value Like "*,*" Then
     Cells(i, 11).Value2 = coefMat(1)
+    Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+End If
+
+'заполнение материалов отдельной строкой
+
+If Cells(i, 2).Value Like "#*" And IsEmpty(Cells(i + 1, 3)) And Not Cells(i, 3).Value Like "*ОБОРУДОВАНИЕ*" Then
+    Cells(i, 11).Value2 = coefMat(1)
+    Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+End If
+
+'заполнение оборудования
+
+If Cells(i, 3).Value Like "*ОБОРУДОВАНИЕ*" And IsEmpty(Cells(i, 11)) Then
+    Cells(i, 11).Value2 = coefEquip(1)
     Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
 End If
 
@@ -287,5 +306,7 @@ Else
 End If
 
 End Sub
+
+
 
 
