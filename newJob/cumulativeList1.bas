@@ -18,7 +18,10 @@ Dim ans As Integer
 Dim ans2 As Integer
 Dim item As Variant
 Dim smetaName As New collection
+
 'последн€€ верси€'
+'отработка итоги по разделу
+
 Sub initialDate()
 '—оздание исходных данных '
 
@@ -91,6 +94,12 @@ For j = 2 To totalByPosition.Count
     
     Cells(totalByPosition(j), 13).Formula = "= L" & totalByPosition(j)
 Next
+
+For i = 1 To totalForSection.Count
+    Cells(totalForSection(i), 12).Formula = "= SUM(M" & beginningOfSection(i) & ":M" & totalForSection(i) - 1 & ")"
+    Cells(totalForSection(i), 12).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
+Next
+
 
 Cells(totalByEstimate(2), 13).Formula = "= SUM(M" & totalByPosition(1) & ":M" & totalByEstimate(2) - 1 & ")"
 Cells(totalByEstimate(2), 13).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
@@ -203,6 +212,10 @@ End Sub
 Sub filCurrentPrices(i)
 'заполнение сметна€ стоимость в текущем уровне цен, руб. Ёћ и ћ
 
+If Cells(i, 1).Value Like "*,*" Then
+    Cells(i, 11).Value2 = coefMat(1)
+    Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+End If
 
     Select Case Cells(i, 3).Value
         Case "Ёћ"
@@ -274,3 +287,5 @@ Else
 End If
 
 End Sub
+
+
