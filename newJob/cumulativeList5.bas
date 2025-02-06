@@ -23,7 +23,6 @@ Dim ans2 As Integer
 Dim item As Variant
 Dim smetaName As New collection
 'создание накопительной с заполнением текущих цен
-'рабочая версия
 'объект Реконструкция здания. Отделение медицинской реабилитации
 
 Sub cumulativeList5()
@@ -64,10 +63,21 @@ Set beginningOfPosition2 = Seach(seachString, seachRange, "row")
 For i = 1 To beginningOfPosition2.Count
     beginningOfPosition.Add beginningOfPosition2(i)
 Next
+
+
+
 Set beginningOfPosition2 = New collection
 
 Call quickSort.quickSort(beginningOfPosition, 1, beginningOfPosition.Count)
 Call quickSort.quickSort(totalByPosition, 1, totalByPosition.Count)
+
+For Each item In beginningOfPosition
+    Debug.Print item
+Next
+
+For Each item In totalByPosition
+    Debug.Print item
+Next
 
 Set seachRange = Range("A1:N" & lastCell)
 seachString = "(наименование работ и затрат*"
@@ -105,9 +115,13 @@ For j = 1 To totalByPosition.Count
     For i = beginning To totalByPosition(j)
         Call filCurrentPrices(i)
     Next
-    If (totalByPosition(j) - beginning) > 1 Then
+    If (totalByPosition(j) - beginning) = 2 Then
+        Cells(totalByPosition(j), 14).Formula = "= SUM(N" & beginning + 1 & ":N" & totalByPosition(j) - 2 & ")"
+    End If
+    If (totalByPosition(j) - beginning) > 2 Then
         Cells(totalByPosition(j), 14).Formula = "= SUM(N" & beginning + 1 & ":N" & totalByPosition(j) - 1 & ")"
-    Else
+    End If
+    If (totalByPosition(j) - beginning) = 1 Then
         Cells(totalByPosition(j), 14).Formula = "=N" & totalByPosition(j) - 1
     End If
     
@@ -180,7 +194,7 @@ For Each item In totalByPosition
     Cells(item, 20).Formula = "=P" & item & "+R" & item
     Cells(item, 19).Formula = "=O" & item & "+Q" & item
 Next
-Cells(totalByEstimate(1), 20).Formula = "= SUM(T" & totalByPosition(1) & ":T" & totalByEstimate(1) - 1 & ")"
+Cells(totalByEstimate(1), 20).Formula = "= SUM(T" & totalByPosition(1) & ":T" & totalByEstimate(1) & ")"
 Call fillTail(20)
 
 Call insertCol("Остаток", 21, smetaName(1), lastCell, "240 230 140")
@@ -324,6 +338,8 @@ Else
 End If
 
 End Sub
+
+
 
 
 
