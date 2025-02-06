@@ -194,7 +194,7 @@ For Each item In totalByPosition
     Cells(item, 20).Formula = "=P" & item & "+R" & item
     Cells(item, 19).Formula = "=O" & item & "+Q" & item
 Next
-Cells(totalByEstimate(1), 20).Formula = "= SUM(T" & totalByPosition(1) & ":T" & totalByEstimate(1) & ")"
+Cells(totalByEstimate(1), 20).Formula = "= SUM(T" & totalByPosition(1) & ":T" & totalByEstimate(1) - 1 & ")"
 Call fillTail(20)
 
 Call insertCol("Остаток", 21, smetaName(1), lastCell, "240 230 140")
