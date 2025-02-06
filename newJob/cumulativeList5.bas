@@ -156,7 +156,7 @@ For j = 1 To totalByPosition.Count
     End If
 Next
 
-If totalsForSection.Count > 0 Then
+If totalsForSection.Count > 0 And totalsForSection.Count = totalForSection.Count Then
     For j = 1 To totalForSection.Count
         Range("A" & totalsForSection(j) & ":A" & totalForSection(j) - 1).EntireRow.Hidden = True
     Next
