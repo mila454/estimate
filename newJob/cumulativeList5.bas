@@ -14,6 +14,11 @@ Dim coefMat As New collection
 Dim coefMeh As New collection
 Dim coefEq As New collection
 Dim coefTransp As New collection
+Dim constructionWorks As New collection
+Dim installationWorks As New collection
+Dim SMR As New collection
+Dim equipment As New collection
+Dim equipment2 As New collection
 Dim seachRange As Range
 Dim seachString As String
 Dim initialPosition As Integer
@@ -43,16 +48,24 @@ seachString = "Итоги по разделу*"
 Set totalsForSection = Seach(seachString, seachRange, "row")
 seachString = "Итоги по смете*"
 Set totalsByEstimate = Seach(seachString, seachRange, "row")
-Set seachRange = Range("A1:N" & lastCell)
-Set seachRange = Range("A" & totalsByEstimate(1) & ":N" & lastCell)
+Set seachRange = Range("A" & totalsByEstimate(1) & ":N" & totalByEstimate(1))
 Set coefMeh = Seach("эксплуатация машин и механизмов", seachRange, 2)
 Set coefMat = Seach("материалы", seachRange, 2)
 Set coefEq = Seach("Оборудование", seachRange, 2)
+Set equipment = Seach("Оборудование", seachRange, "row")
+Set constructionWorks = Seach("Строительные работы", seachRange, "row")
+Set installationWorks = Seach("Монтажные работы", seachRange, "row")
+Set seachRange = Range("A" & totalByEstimate(1) & ":N" & lastCell)
+Set SMR = Seach(" Строительно-монтажные работы", seachRange, "row")
+Set equipment2 = Seach("Оборудование", seachRange, "row")
+
 Call quickSort.quickSort(totalsForSection, 1, totalsForSection.Count)
 Call quickSort.quickSort(totalsByEstimate, 1, totalsByEstimate.Count)
 Call quickSort.quickSort(beginningOfSection, 1, beginningOfSection.Count)
 Call quickSort.quickSort(totalForSection, 1, totalForSection.Count)
 Call quickSort.quickSort(totalByEstimate, 1, totalByEstimate.Count)
+Call quickSort.quickSort(equipment, 1, equipment.Count)
+
 For Each item In Range("B1:B" & totalByPosition(1))
     If item.Value Like "Обоснование" Then
         initialPosition = item.row + 5
@@ -171,16 +184,12 @@ If totalsForSection.Count > 0 And totalsForSection.Count = totalForSection.Count
     Next
 End If
 
-For j = 1 To totalByEstimate.Count
-    Range("A" & totalsByEstimate(j) & ":A" & totalByEstimate(j) - 1).EntireRow.Hidden = True
-Next
-
 Call insertCol("Акт № 1", 15, smetaName(1), lastCell)
-Cells(totalByEstimate(1), 16).Formula = "= SUM(P" & totalByPosition(1) & ":P" & totalByEstimate(1) - 1 & ")"
+Cells(totalByEstimate(1), 16).Formula = "= SUM(P" & totalByPosition(1) & ":P" & totalsByEstimate(1) - 1 & ")"
 Call fillTail(16)
 
 Call insertCol("Акт № 2", 17, smetaName(1), lastCell)
-Cells(totalByEstimate(1), 18).Formula = "= SUM(R" & totalByPosition(1) & ":R" & totalByEstimate(1) - 1 & ")"
+Cells(totalByEstimate(1), 18).Formula = "= SUM(R" & totalByPosition(1) & ":R" & totalsByEstimate(1) - 1 & ")"
 Call fillTail(18)
 
 Call insertCol("ИТОГО по Актам", 19, smetaName(1), lastCell, "255 250 205")
@@ -189,7 +198,7 @@ For Each item In totalByPosition
     Cells(item, 20).Formula = "=P" & item & "+R" & item
     Cells(item, 19).Formula = "=O" & item & "+Q" & item
 Next
-Cells(totalByEstimate(1), 20).Formula = "= SUM(T" & totalByPosition(1) & ":T" & totalByEstimate(1) & ")"
+Cells(totalByEstimate(1), 20).Formula = "= SUM(T" & totalByPosition(1) & ":T" & totalsByEstimate(1) - 1 & ")"
 Call fillTail(20)
 
 Call insertCol("Остаток", 21, smetaName(1), lastCell, "240 230 140")
@@ -317,6 +326,24 @@ For Each item In Range("N" & totalByEstimate(1) + 1 & ":N" & lastCell)
         Cells(item.row, coll).PasteSpecial xlFormulas
     End If
 Next
+
+For Each item In Range("C" & totalByEstimate(1) + 1 & ":K" & lastCell)
+    If item.Value = "Строительно-монтажные работы" Then
+        If constructionWorks.Count > 0 And installationWorks.Count > 0 Then
+            Cells(item.row, coll).Value = Cells(constructionWorks, coll) + Cells(installationWorks, coll)
+        End If
+        If constructionWorks.Count > 0 And installationWorks.Count < 0 Then
+            Cells(item.row, coll).Value = Cells(constructionWorks, coll)
+        End If
+        If constructionWorks.Count < 0 And installationWorks.Count > 0 Then
+            Cells(item.row, coll).Value = Cells(installationWorks, coll)
+        End If
+    End If
+    If item.Value = "Оборудование" Then
+        Cells(item.row, coll).Value = Cells(equipment2, coll)
+    End If
+Next
+
 
 With Range(Cells(totalByEstimate(1), coll), Cells(lastCell, coll))
     .Font.Bold = True
