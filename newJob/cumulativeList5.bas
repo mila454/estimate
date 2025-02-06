@@ -12,6 +12,7 @@ Dim totalByEstimate As New collection
 Dim totalsByEstimate As New collection
 Dim coefMat As New collection
 Dim coefMeh As New collection
+Dim coefEq As New collection
 Dim coefTransp As New collection
 Dim seachRange As Range
 Dim seachString As String
@@ -43,8 +44,10 @@ Set totalsForSection = Seach(seachString, seachRange, "row")
 seachString = "Итоги по смете*"
 Set totalsByEstimate = Seach(seachString, seachRange, "row")
 Set seachRange = Range("A1:N" & lastCell)
+Set seachRange = Range("A" & totalsByEstimate(1) & ":N" & lastCell)
 Set coefMeh = Seach("эксплуатация машин и механизмов", seachRange, 2)
 Set coefMat = Seach("материалы", seachRange, 2)
+Set coefEq = Seach("Оборудование", seachRange, 2)
 Call quickSort.quickSort(totalsForSection, 1, totalsForSection.Count)
 Call quickSort.quickSort(totalsByEstimate, 1, totalsByEstimate.Count)
 Call quickSort.quickSort(beginningOfSection, 1, beginningOfSection.Count)
@@ -186,7 +189,7 @@ For Each item In totalByPosition
     Cells(item, 20).Formula = "=P" & item & "+R" & item
     Cells(item, 19).Formula = "=O" & item & "+Q" & item
 Next
-Cells(totalByEstimate(1), 20).Formula = "= SUM(T" & totalByPosition(1) & ":T" & totalByEstimate(1) - 1 & ")"
+Cells(totalByEstimate(1), 20).Formula = "= SUM(T" & totalByPosition(1) & ":T" & totalByEstimate(1) & ")"
 Call fillTail(20)
 
 Call insertCol("Остаток", 21, smetaName(1), lastCell, "240 230 140")
@@ -255,6 +258,11 @@ If Cells(i + 1, 2).Value Like "ФССЦ-*" Then
     Cells(i + 1, 14).Formula = "=round(L" & i + 1 & "*M" & i + 1 & ",2)"
 End If
     
+If Cells(i + 1, 1).Value Like "*О" Then
+    Cells(i + 1, 13).Value2 = coefEq(1)
+    Cells(i + 1, 14).Formula = "=round(L" & i + 1 & "*M" & i + 1 & ",2)"
+End If
+
     Select Case Cells(i, 3).Value
         Case "ЭМ"
             Cells(i, 13).Value2 = coefMeh(1)
