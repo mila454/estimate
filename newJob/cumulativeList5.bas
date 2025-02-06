@@ -71,14 +71,6 @@ Set beginningOfPosition2 = New collection
 Call quickSort.quickSort(beginningOfPosition, 1, beginningOfPosition.Count)
 Call quickSort.quickSort(totalByPosition, 1, totalByPosition.Count)
 
-For Each item In beginningOfPosition
-    Debug.Print item
-Next
-
-For Each item In totalByPosition
-    Debug.Print item
-Next
-
 Set seachRange = Range("A1:N" & lastCell)
 seachString = "(наименование работ и затрат*"
 Set smetaName = Seach(seachString, seachRange, "row")
