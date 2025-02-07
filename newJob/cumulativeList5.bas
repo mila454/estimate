@@ -67,8 +67,11 @@ Call quickSort.quickSort(totalByEstimate, 1, totalByEstimate.Count)
 Call quickSort.quickSort(equipment, 1, equipment.Count)
 
 For Each item In Range("B1:B" & totalByPosition(1))
-    If item.Value Like "Обоснование" Then
+    If item.Value Like "Обоснование" And beginningOfSection.Count > 0 Then
         initialPosition = item.row + 5
+    End If
+    If item.Value Like "Обоснование" And beginningOfSection.Count = 0 Then
+        initialPosition = item.row + 4
     End If
 Next
 Set seachRange = Range("B" & initialPosition & ":B" & lastCell)
