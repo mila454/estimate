@@ -206,8 +206,11 @@ item = 0
 For Each item In totalByPosition
     Cells(item, 22).Formula = "=N" & item & "-T" & item
 Next
-Cells(totalByEstimate(1), 22).Formula = "= SUM(V" & totalByPosition(1) & ":V" & totalByEstimate(1) - 1 & ")"
-Call fillTail(22)
+
+For i = totalByEstimate(1) To lastCell
+        Cells(i, 22).Formula = "=N" & i & "-T" & i
+Next
+
 
 End Sub
 
