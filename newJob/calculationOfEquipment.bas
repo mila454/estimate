@@ -13,24 +13,34 @@ Dim stringOfFormula As String
 Sub calculationOfEquipment()
 'ğàñ÷åò îáîğóäîâàíèÿ Ğîññîëèìî
 
+j = 1
+
 lastCell = seachLastCell()
 
 Set seachRange = Range("A1:C" & lastCell)
 seachString = "ÎÁÎĞÓÄÎÂÀÍÈÅ:*"
 Set åquipment = Estimate.Seach(seachString, seachRange)
-seachString = " Îáîğóäîâàíèå*"
+seachString = "Îáîğóäîâàíèå"
 Set åquipmentSummary = Estimate.Seach(seachString, seachRange)
 Call quickSort.quickSort(åquipment, 1, åquipment.Count)
 
 For j = 1 To åquipment.Count
     If j = 1 Then
-        stringOfFormula = "L" & åquipment(j)
+        If IsEmpty(Cells(åquipment(j) + 2, 12)) Then
+            stringOfFormula = "L" & åquipment(j) + 3
+        Else
+            stringOfFormula = "L" & åquipment(j) + 2
+        End If
     Else
-        stringOfFormula = stringOfFormula & "+L" & åquipment(j)
+        If IsEmpty(Cells(åquipment(j) + 2, 12)) Then
+            stringOfFormula = stringOfFormula & "+L" & åquipment(j) + 3
+        Else
+            stringOfFormula = stringOfFormula & "+L" & åquipment(j) + 2
+        End If
     End If
 Next
 
-Cells(åquipmentSummary(1), 12).Formula = "=" & stringOfFormula
+Cells(åquipmentSummary(åquipmentSummary.Count - 1), 12).Formula = "=" & stringOfFormula
 
 
 
