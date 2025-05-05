@@ -16,19 +16,45 @@ Dim initialPosition As Integer
 Dim i As Integer
 Dim j As Integer
 Dim ans As Integer
+Dim numberColumn As Integer
+Dim letterColumn As String
 Dim ans2 As Integer
+Dim ans3 As Integer
 Dim item As Variant
 Dim smetaName As New collection
+Dim еquipment As New collection
+Dim еquipmentSummary As New collection
+Dim stringOfFormula As String
+Dim shift As Integer
 
-'последняя версия'
+'универсальная: выбор объекта Россолимо или реконструкция или кс2 по Россолимо
+'черновик
+'в накопительной по актам не заполняет итоги по разделам, по  смете, хвост
+'в накопительной скрытие столбцов твердо установлено
+Sub selectMode()
 
+ans = MsgBox("Объект - Общежитие Россолимо?", 4)
+If ans = 6 Then
+    ans = MsgBox("Объект - смета - Общежитие Россолимо?", 4)
+    If ans = 6 Then
+        numberColumn = 12
+        letterColumn = "L"
+        Call initialDate
+    Else
+        Call initialDate
+    End If
+Else
+    Call cumulativeList4.initialDate
+End If
+
+End Sub
 
 Sub initialDate()
 'Создание исходных данных '
 
 lastCell = seachLastCell()
 
-Set seachRange = Range("A1:L" & lastCell)
+Set seachRange = Range("A1:N" & lastCell)
 seachString = "Раздел: *"
 Set beginningOfSection = Estimate.Seach(seachString, seachRange)
 seachString = "Итого по разделу *"
@@ -49,7 +75,8 @@ Call quickSort.quickSort(totalForSection, 1, totalForSection.Count)
 Call quickSort.quickSort(totalByPosition, 1, totalByPosition.Count)
 Call quickSort.quickSort(totalByEstimate, 1, totalByEstimate.Count)
 
-Set seachRange = Range("A1:L" & lastCell)
+
+Set seachRange = Range("A1:N" & lastCell)
 Set coefMeh = Seach("эксплуатация машин и механизмов", seachRange, 3)
 Set coefMat = Seach("материальные ресурсы", seachRange, 3)
 Set coefTransp = Seach("перевозка", seachRange, 3)
@@ -84,36 +111,40 @@ For j = 2 To totalByPosition.Count
     Next
     For i = beginning To totalByPosition(j)
         If Cells(i, 3).Value Like "Перевозка *" Or Cells(i, 3).Value Like "Погрузка *" Then
-            Cells(i, 11).Value2 = coefMeh(1)
-            Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+            Cells(i, numberColumn - 1).Value2 = coefMeh(1)
+            Cells(i, numberColumn).Formula = "=round(K" & i & "*J" & i & ",2)"
         Else
             Call filCurrentPrices(i)
         End If
     Next
-    Cells(totalByPosition(j), 12).Formula = "= SUM(L" & beginning + 1 & ":L" & totalByPosition(j) - 1 & ")"
-    If Cells(totalByPosition(j), 12).MergeCells = True Then
+    Cells(totalByPosition(j), numberColumn).Formula = "= SUM(L" & beginning + 1 & ":L" & totalByPosition(j) - 1 & ")"
+    If Cells(totalByPosition(j), numberColumn).MergeCells = True Then
         Call cancelMerge("K", totalByPosition(j), "L", totalByPosition(j), 1)
     End If
     
-    Cells(totalByPosition(j), 13).Formula = "= L" & totalByPosition(j)
+    Cells(totalByPosition(j), numberColumn + 1).Formula = "= L" & totalByPosition(j)
 Next
 
 'итого по разделам
 For i = 1 To totalForSection.Count
-    Cells(totalForSection(i), 12).Formula = "= SUM(M" & beginningOfSection(i) & ":M" & totalForSection(i) - 1 & ")"
-    Cells(totalForSection(i), 12).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
+    Cells(totalForSection(i), numberColumn).Formula = "= SUM(M" & beginningOfSection(i) & ":M" & totalForSection(i) - 1 & ")"
+    Cells(totalForSection(i), numberColumn).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
 Next
 
 'итого по смете
-Cells(totalByEstimate(2), 13).Formula = "= SUM(M" & totalByPosition(1) & ":M" & totalByEstimate(2) - 1 & ")"
-Cells(totalByEstimate(2), 13).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
+Cells(totalByEstimate(2), numberColumn + 1).Formula = "= SUM(M" & totalByPosition(1) & ":M" & totalByEstimate(2) - 1 & ")"
+Cells(totalByEstimate(2), numberColumn + 1).NumberFormat = "#,##0.00_ ;[Red]-#,##0.00 "
 Columns("M:M").EntireColumn.AutoFit
 
 Cells(totalByEstimate(2), 13).Select
 
 ans = MsgBox("Проверьте итоговую сумму сметы", 1)
 If ans = 1 Then
-    Cells(totalByEstimate(2), 12).Formula = "= M" & totalByEstimate(2)
+    'Cells(totalByEstimate(2), numberColumn).Formula = "= M" & totalByEstimate(2)
+    ans3 = MsgBox("Нужен расчет оборудования?", 4)
+    If ans3 = 6 Then
+        Call calculationOfEquipment
+    End If
     ans2 = MsgBox("Создать накопительную?", 4)
     If ans2 = 6 Then
         Call cumulativeList
@@ -126,8 +157,8 @@ End If
 
 End Sub
 Sub cumulativeList()
-
-seachString = "(наименование конструктивного решения*"
+Set seachRange = Range("A1:L" & lastCell)
+seachString = "(наименование конструктивного решения)*"
 Set smetaName = Seach(seachString, seachRange, "row")
 
 'скрыть шапку и лишние столбцы
@@ -142,29 +173,29 @@ For j = 2 To totalByPosition.Count
     Range("A" & totalByPosition(j - 1) + 2 & ":A" & totalByPosition(j) - 1).EntireRow.Hidden = True
 Next
 
-Call insertCol("Акт № 1", 15, initialPosition - 6, lastCell)
-Cells(totalByEstimate(2), 15).Formula = "= SUM(O" & totalByPosition(1) + 1 & ":O" & totalByEstimate(2) - 1 & ")"
-Call fillTail(15)
+Call insertCol("Акт № 1", numberColumn + 3, initialPosition - 6, lastCell)
+Cells(totalByEstimate(2), numberColumn + 3).Formula = "= SUM(O" & totalByPosition(1) + 1 & ":O" & totalByEstimate(2) - 1 & ")"
+Call fillTail(numberColumn + 3)
 
-Call insertCol("Акт № 2", 17, initialPosition - 6, lastCell)
-Cells(totalByEstimate(2), 17).Formula = "= SUM(Q" & totalByPosition(1) + 1 & ":Q" & totalByEstimate(2) - 1 & ")"
-Call fillTail(17)
+Call insertCol("Акт № 2", numberColumn + 5, initialPosition - 6, lastCell)
+Cells(totalByEstimate(2), numberColumn + 5).Formula = "= SUM(Q" & totalByPosition(1) + 1 & ":Q" & totalByEstimate(2) - 1 & ")"
+Call fillTail(numberColumn + 5)
 
-Call insertCol("ИТОГО по Актам", 19, initialPosition - 6, lastCell, "255 250 205")
+Call insertCol("ИТОГО по Актам", numberColumn + 7, initialPosition - 6, lastCell, "255 250 205")
 
 For Each item In totalByPosition
-    Cells(item, 19).Formula = "=O" & item & "+Q" & item
+    Cells(item, numberColumn + 7).Formula = "=O" & item & "+Q" & item
 Next
-Cells(totalByEstimate(2), 19).Formula = "= SUM(R" & totalByPosition(1) + 1 & ":R" & totalByEstimate(2) - 1 & ")"
-Call fillTail(19)
+Cells(totalByEstimate(2), numberColumn + 7).Formula = "= SUM(R" & totalByPosition(1) + 1 & ":R" & totalByEstimate(2) - 1 & ")"
+Call fillTail(numberColumn + 7)
 
-Call insertCol("Остаток", 21, initialPosition - 6, lastCell, "240 230 140")
+Call insertCol("Остаток", numberColumn + 9, initialPosition - 6, lastCell, "240 230 140")
 item = 0
 For Each item In totalByPosition
-    Cells(item, 21).Formula = "=L" & item & "-S" & item
+    Cells(item, numberColumn + 9).Formula = "=L" & item & "-S" & item
 Next
-Cells(totalByEstimate(2), 21).Formula = "= SUM(U" & totalByPosition(1) + 1 & ":U" & totalByEstimate(2) - 1 & ")"
-Call fillTail(21)
+Cells(totalByEstimate(2), numberColumn + 9).Formula = "= SUM(U" & totalByPosition(1) + 1 & ":U" & totalByEstimate(2) - 1 & ")"
+Call fillTail(numberColumn + 9)
 
 End Sub
 Function seachLastCell()
@@ -217,34 +248,34 @@ Sub filCurrentPrices(i)
 'заполнение сметная стоимость в текущем уровне цен, руб. ЭМ и М
 
 'заполнение материалов в составе позиции
-If Cells(i, 1).Value Like "*,*" Then
-    Cells(i, 11).Value2 = coefMat(1)
-    Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+If Cells(i, 1).Value Like "*,*" And Not Cells(i, 3).Value Like "*ОБОРУДОВАНИЕ*" Then
+    Cells(i, numberColumn - 1).Value2 = coefMat(1)
+    Cells(i, numberColumn).Formula = "=round(K" & i & "*J" & i & ",2)"
 End If
 
 'заполнение материалов отдельной строкой
 
 If Cells(i, 2).Value Like "#*" And IsEmpty(Cells(i + 1, 3)) And Not Cells(i, 3).Value Like "*ОБОРУДОВАНИЕ*" Then
-    Cells(i, 11).Value2 = coefMat(1)
-    Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+    Cells(i, numberColumn - 1).Value2 = coefMat(1)
+    Cells(i, numberColumn).Formula = "=round(K" & i & "*J" & i & ",2)"
 End If
 
 'заполнение оборудования
 
 If Cells(i, 3).Value Like "*ОБОРУДОВАНИЕ*" And IsEmpty(Cells(i, 11)) Then
-    Cells(i, 11).Value2 = coefEquip(1)
-    Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+    Cells(i, numberColumn - 1).Value2 = coefEquip(1)
+    Cells(i, numberColumn).Formula = "=round(K" & i & "*J" & i & ",2)"
 End If
 
     Select Case Cells(i, 3).Value
         Case "ЭМ"
-            Cells(i, 11).Value2 = coefMeh(1)
-                Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+            Cells(i, numberColumn - 1).Value2 = coefMeh(1)
+                Cells(i, numberColumn).Formula = "=round(K" & i & "*J" & i & ",2)"
         Case "М"
-                Cells(i, 11).Value2 = coefMat(1)
-                Cells(i, 12).Formula = "=round(K" & i & "*J" & i & ",2)"
+                Cells(i, numberColumn - 1).Value2 = coefMat(1)
+                Cells(i, numberColumn).Formula = "=round(K" & i & "*J" & i & ",2)"
         Case "в т.ч. ОТм", "ФОТ"
-                Cells(i, 12).ClearContents
+                Cells(i, numberColumn).ClearContents
     End Select
 
 
@@ -281,7 +312,7 @@ Sub fillTail(coll)
 
 For Each item In Range("L" & totalByEstimate(2) + 1 & ":L" & lastCell)
     If item.HasFormula Then
-        Cells(item.row, 12).Copy
+        Cells(item.row, numberColumn).Copy
         Cells(item.row, coll).PasteSpecial xlFormulas
     End If
 Next
@@ -306,6 +337,54 @@ Else
 End If
 
 End Sub
+
+Sub calculationOfEquipment()
+'расчет оборудования Россолимо
+
+j = 1
+
+lastCell = seachLastCell()
+
+Set seachRange = Range("A1:C" & lastCell)
+seachString = "ОБОРУДОВАНИЕ:*"
+Set еquipment = Estimate.Seach(seachString, seachRange)
+seachString = "Оборудование"
+Set еquipmentSummary = Estimate.Seach(seachString, seachRange)
+Call quickSort.quickSort(еquipment, 1, еquipment.Count)
+
+For j = 1 To еquipment.Count
+    If Cells(еquipment(j), 1).Value Like "*,*" Then
+        shift = 0
+    Else
+        If IsEmpty(Cells(еquipment(j) + 2, 12)) Then
+            shift = 3
+        Else
+            shift = 2
+        End If
+    End If
+
+
+    If j = 1 Then
+        stringOfFormula = "L" & еquipment(j) + shift
+    Else
+        stringOfFormula = stringOfFormula & "+L" & еquipment(j) + shift
+    End If
+Next
+
+If еquipmentSummary.Count = 1 Then
+    Cells(еquipmentSummary(еquipmentSummary.Count), 12).Formula = "=" & stringOfFormula
+Else
+    Cells(еquipmentSummary(еquipmentSummary.Count - 1), 12).Formula = "=" & stringOfFormula
+End If
+
+End Sub
+
+
+
+
+
+
+
 
 
 
